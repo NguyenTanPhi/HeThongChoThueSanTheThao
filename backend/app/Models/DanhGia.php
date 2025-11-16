@@ -1,0 +1,13 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class DanhGia extends Model
+{
+    protected $table = 'danh_gia';
+    public $timestamps = false;
+
+    protected $fillable = ['nguoi_dung_id', 'san_id', 'diem_danh_gia', 'noi_dung'];
+}
