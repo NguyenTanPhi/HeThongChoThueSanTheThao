@@ -15,6 +15,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
+// Route VNPay return đặt ngoài auth:sanctum để VNPay redirect vào không cần token
+Route::any('/vnpay_return', [OwnerController::class, 'vnpayReturn']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -64,12 +67,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/owner/mua-goi', [OwnerController::class, 'muaGoi']);
     Route::post('/owner/check-thanh-toan/{orderId}', [OwnerController::class, 'checkThanhToan']);
     Route::get('/owner/goi-hien-tai', [OwnerController::class, 'goiHienTai']);
+    Route::post('/owner/thanh-toan', [OwnerController::class, 'taoThanhToan']);
 
     // Chủ sân: quản lý lịch trống
     Route::prefix('owner')->group(function () {
         Route::get('/san/{id}/lich-trong', [SanController::class, 'getLichTrong']);
         Route::post('/san/{id}/lich-trong', [SanController::class, 'themLichTrong']);
-        Route::put('/san/{id}/lich-trong/{lichId}', [SanController::class, 'suaLichTrong']);   
+        Route::put('/san/{id}/lich-trong/{lichId}', [SanController::class, 'suaLichTrong']);
         Route::delete('/san/{id}/lich-trong/{lichId}', [SanController::class, 'xoaLichTrong']);
     });
 
@@ -86,5 +90,4 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::put('/update-profile', [AuthController::class, 'updateProfile']);
-
 }); // <-- ĐÓNG TOÀN BỘ auth:sanctum
