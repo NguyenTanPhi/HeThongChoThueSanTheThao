@@ -130,7 +130,7 @@ if (isset($_FILES['hinh_anh']) && $_FILES['hinh_anh']['error'] == 0) {
         ];
         if ($hinh_anh) $postData['hinh_anh'] = $hinh_anh;
 
-        $response_raw = callAPI('POST', '/san', $postData, $_SESSION['token']);
+        $response_raw = callAPI('POST', '/owner/san', $postData, $_SESSION['token']);
 
         // FIX CHÍNH: ĐẢM BẢO $response LUÔN LÀ STRING
         $response = is_array($response_raw) ? ($response_raw['body'] ?? json_encode($response_raw)) : $response_raw;

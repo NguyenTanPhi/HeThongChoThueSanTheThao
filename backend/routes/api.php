@@ -37,9 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:owner')->prefix('owner')->group(function () {
         Route::post('/san', [SanController::class, 'store']);
         Route::get('/my-san', [SanController::class, 'mySan']);
+        Route::get('/lich-su-dat', [DatSanController::class, 'lichSuDat']);
 
         // DI CHUYỂN VÀO ĐÂY – ĐÚNG!
-        Route::get('/yeu-cau-thue', [DatSanController::class, 'danhSachChoDuyet']);
         Route::get('/notifications', [OwnerController::class, 'getNotifications']);
         Route::post('/notifications/{id}/read', [OwnerController::class, 'markNotificationRead']);
     }); // <-- ĐÓNG ĐÚNG

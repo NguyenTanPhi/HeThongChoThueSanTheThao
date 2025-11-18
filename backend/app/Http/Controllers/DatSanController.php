@@ -64,7 +64,28 @@ class DatSanController extends Controller
         $bookings = DatSan::with('san')->where('user_id', $request->user()->id)->get();
         return response()->json($bookings);
     }
-    public function danhSachChoDuyet(Request $request)
+    public function lichSuDat(Request $request)
+{
+    $ownerId = auth()->id();
+
+    // Trạng thái muốn lấy, mặc định = đã thanh toán
+    $status = $request->trang_thai ?? 'da_thanh_toan';
+
+    $data = DatSan::where('trang_thai', $status)
+        ->whereHas('san', function($q) use ($ownerId) {
+            $q->where('owner_id', $ownerId);
+        })
+        ->with([
+            'user:id,name,email',
+            'san:id,ten_san'
+        ])
+        ->orderBy('ngay_dat', 'asc')
+        ->get();
+
+    return response()->json($data);
+}
+
+    /*public function danhSachChoDuyet(Request $request)
     {
         // Lấy sân của chủ
         $sanChu = San::where('owner_id', $request->user()->id)->pluck('id');
@@ -76,7 +97,7 @@ class DatSanController extends Controller
 
         return response()->json($yeuCau);
     }
-
+    */
     public function chiTiet(Request $request, $id)
     {
         $datSan = DatSan::with('user', 'san')->findOrFail($id);
