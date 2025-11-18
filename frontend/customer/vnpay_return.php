@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once '../config.php';
 
 // Trạng thái thanh toán VNPay
@@ -28,7 +27,7 @@ if ($status === 'success' && $orderCode && $datSanId) {
     if ($token) {
 
         // 🔥 endpoint cho đặt sân, bạn thay theo backend bạn đang dùng
-        $apiUrl = API_URL . '/customer/thanh-toan-dat-san';
+        $apiUrl = API_URL . '/customer/check-thanh-toan/' . $orderCode;
 
         $payload = json_encode([
             'dat_san_id' => $datSanId,
@@ -63,15 +62,26 @@ if ($status === 'success' && $orderCode && $datSanId) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background: #f8fafc; }
+        body {
+            background: #f8fafc;
+        }
+
         .result-card {
             max-width: 500px;
             margin: 60px auto;
             border-radius: 18px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
         }
-        .icon-success { color: #28a745; font-size: 4rem; }
-        .icon-fail { color: #dc3545; font-size: 4rem; }
+
+        .icon-success {
+            color: #28a745;
+            font-size: 4rem;
+        }
+
+        .icon-fail {
+            color: #dc3545;
+            font-size: 4rem;
+        }
     </style>
 </head>
 

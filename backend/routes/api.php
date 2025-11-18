@@ -88,10 +88,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('customer')->group(function () {
         Route::get('/san', [CustomerSanController::class, 'index']);
         Route::get('/san/{id}', [CustomerSanController::class, 'show']);
-        Route::get('/san/{id}/lich-trong', [CustomerSanController::class, 'lichTrong']); 
+        Route::get('/san/{id}/lich-trong', [CustomerSanController::class, 'lichTrong']);
         Route::post('/dat-san-thanh-toan', [DatSanController::class, 'taoThanhToanDatSan']);
         Route::post('/check-thanh-toan/{orderId}', [DatSanController::class, 'checkThanhToan']);
-
     });
 
     Route::put('/update-profile', [AuthController::class, 'updateProfile']);

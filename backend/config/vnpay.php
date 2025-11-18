@@ -5,4 +5,5 @@ return [
     'vnp_HashSecret' => env('VNP_HASH_SECRET', ''),
     'vnp_Url'        => env('VNP_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
     'vnp_Returnurl'  => env('VNP_RETURN_URL', 'http://localhost:8000/vnpay-return'),
+    'vnp_DatSan_Returnurl'  => env('VNP_DAT_SAN_RETURN_URL', 'http://localhost:8000/api/customer/vnpay_return'),
 ];
