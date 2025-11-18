@@ -12,66 +12,68 @@ if (!$san_id || !$ngay || !$gio_bat_dau || !$gio_ket_thuc) {
     die("Thiếu thông tin thanh toán!");
 }
 
-$success = '';
-$error = '';
+// Tạo mã đơn ngẫu nhiên
+$orderId = time() . rand(1000, 9999);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Tạo đơn "đặt sân chờ thanh toán" thông qua API Laravel
+$payload = [
+    'san_id' => $san_id,
+    'ngay_dat' => $ngay,
+    'gio_bat_dau' => $gio_bat_dau,
+    'gio_ket_thuc' => $gio_ket_thuc,
+    'tong_gia' => $gia,
+    'order_code' => $orderId,
+];
 
-    // Giả lập thanh toán thành công
-    $thanhToanThanhCong = true;
+$res = callAPI('POST', '/dat-san-khoi-tao', $payload, $_SESSION['token']);
 
-    if ($thanhToanThanhCong) {
-
-        // Gọi API tạo đặt sân
-        $payload = [
-            'san_id' => $san_id,
-            'ngay_dat' => $ngay,
-            'gio_bat_dau' => $gio_bat_dau,
-            'gio_ket_thuc' => $gio_ket_thuc,
-            'tong_gia' => $gia,
-        ];
-
-        $res = callAPI('POST', '/dat-san', $payload, $_SESSION['token']);
-
-        if (isset($res['dat_san'])) {
-            $success = "Thanh toán thành công! Bạn đã đặt sân thành công.";
-        } else {
-            $error = "Thanh toán thành công nhưng tạo đặt sân thất bại!";
-        }
-    } else {
-        $error = "Thanh toán thất bại!";
-    }
+if (!isset($res['dat_san_id'])) {
+    die("Không tạo được đơn đặt sân!");
 }
+
+$datSanId = $res['dat_san_id'];
+
+// ------ TẠO LINK THANH TOÁN VNPay ------ //
+$vnp_TmnCode = "YOUR_TMNCODE";
+$vnp_HashSecret = "YOUR_SECRET";
+$vnp_ReturnUrl = "http://localhost/frontend/thanhtoan/vnpay_return.php?datSanId=$datSanId";
+
+$vnp_Amount = $gia * 100;
+$vnp_TxnRef = $orderId;
+$vnp_OrderInfo = "Thanh toan dat san #$datSanId";
+
+$inputData = [
+    "vnp_Version" => "2.1.0",
+    "vnp_Command" => "pay",
+    "vnp_TmnCode" => $vnp_TmnCode,
+    "vnp_Amount" => $vnp_Amount,
+    "vnp_CurrCode" => "VND",
+    "vnp_TxnRef" => $vnp_TxnRef,
+    "vnp_OrderInfo" => $vnp_OrderInfo,
+    "vnp_OrderType" => "billpayment",
+    "vnp_Locale" => "vn",
+    "vnp_ReturnUrl" => $vnp_ReturnUrl,
+    "vnp_IpAddr" => $_SERVER['REMOTE_ADDR'],
+    "vnp_CreateDate" => date('YmdHis')
+];
+
+ksort($inputData);
+$query = "";
+$hashdata = "";
+
+foreach ($inputData as $key => $value) {
+    $query .= urlencode($key) . "=" . urlencode($value) . "&";
+    $hashdata .= $key . "=" . $value . "&";
+}
+
+$query = rtrim($query, "&");
+$hashdata = rtrim($hashdata, "&");
+
+$vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?" . $query;
+$vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+$vnp_Url .= "&vnp_SecureHash=" . $vnpSecureHash;
+
+// CHUYỂN SANG VNPay THANH TOÁN
+header("Location: $vnp_Url");
+exit;
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Thanh toán sân</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container mt-5">
-
-    <?php if ($success): ?>
-        <div class="alert alert-success"><?= $success ?></div>
-        <a class="btn btn-primary" href="chi-tiet-san.php?id=<?= $san_id ?>">Quay lại sân</a>
-        <?php exit; ?>
-    <?php endif; ?>
-
-    <?php if ($error): ?>
-        <div class="alert alert-danger"><?= $error ?></div>
-        <a class="btn btn-secondary" href="dat-san.php?san_id=<?= $san_id ?>&ngay=<?= $ngay ?>&gio_bat_dau=<?= $gio_bat_dau ?>&gio_ket_thuc=<?= $gio_ket_thuc ?>&gia=<?= $gia ?>">Thử lại</a>
-    <?php endif; ?>
-
-    <h3>Thanh toán đặt sân</h3>
-    <p>Sân ID: <?= $san_id ?></p>
-    <p>Ngày: <?= date('d/m/Y', strtotime($ngay)) ?></p>
-    <p>Giờ: <?= substr($gio_bat_dau,0,5) ?> - <?= substr($gio_ket_thuc,0,5) ?></p>
-    <p>Tổng tiền: <b><?= number_format($gia) ?>₫</b></p>
-
-    <form method="post">
-        <button type="submit" class="btn btn-success w-100 mt-3">Thanh toán ngay</button>
-    </form>
-</div>
-</body>
-</html>

@@ -32,7 +32,6 @@ if ($status === 'success' && $orderCode) {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="vi">
 

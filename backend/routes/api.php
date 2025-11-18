@@ -9,6 +9,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\GoiDichVuController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\CustomerSanController;
+use App\Models\DatSan;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -16,7 +17,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 // Route VNPay return đặt ngoài auth:sanctum để VNPay redirect vào không cần token
-Route::any('/vnpay_return', [OwnerController::class, 'vnpayReturn']);
+Route::get('/vnpay_return', [OwnerController::class, 'vnpayReturn']);
+Route::get('/customer/vnpay_return', [DatSanController::class, 'vnpayReturnDatSan']);
+
+
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -84,9 +88,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('customer')->group(function () {
         Route::get('/san', [CustomerSanController::class, 'index']);
         Route::get('/san/{id}', [CustomerSanController::class, 'show']);
-        Route::get('/san/{id}/lich-trong', [CustomerSanController::class, 'lichTrong']);
-        Route::get('/notifications', [DatSanController::class, 'getNotifications']);
-        Route::post('/mark-notification-read', [DatSanController::class, 'markNotificationRead']);
+        Route::get('/san/{id}/lich-trong', [CustomerSanController::class, 'lichTrong']); 
+        Route::post('/dat-san-thanh-toan', [DatSanController::class, 'taoThanhToanDatSan']);
+        Route::post('/check-thanh-toan/{orderId}', [DatSanController::class, 'checkThanhToan']);
+
     });
 
     Route::put('/update-profile', [AuthController::class, 'updateProfile']);

@@ -7,7 +7,7 @@ $user = getUser();
 // Lấy danh sách sân
 $response = callAPI('GET', '/san', null, $_SESSION['token']);
 $sanList = $response['data'] ?? [];
-?>
+?> 
 
 <!DOCTYPE html>
 <html lang="vi">

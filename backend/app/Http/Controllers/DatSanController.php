@@ -9,7 +9,7 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Cache; // <-- thêm Cache
 
 class DatSanController extends Controller
 {
@@ -82,87 +82,139 @@ public function chiTiet(Request $request, $id)
     $datSan = DatSan::with('user', 'san')->findOrFail($id);
     return response()->json($datSan);
 }
-public function duyetDatSan(Request $request)
+/**
+     * Tạo URL thanh toán VNPay cho gói dịch vụ
+     */
+    public function taoThanhToanDatSan(Request $request)
 {
-    $request->validate([
-        'dat_san_id' => 'required|integer',
-        'trang_thai' => 'required|in:da_duyet,tu_choi'
-    ]);
+    try {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
-    $datSan = DatSan::with('user', 'san')->findOrFail($request->dat_san_id);
+        $datSanId = $request->input('san_id');
+        if (!$datSanId) {
+            return response()->json(['message' => 'Thiếu ID đặt sân'], 400);
+        }
 
-    if ($request->trang_thai === 'da_duyet') {
-        $datSan->trang_thai = 'da_duyet';
-        $datSan->save();
+        $datSan = DB::table('dat_san')->where('id', $datSanId)->first();
+        if (!$datSan) {
+            return response()->json(['message' => 'Không tìm thấy đơn đặt sân'], 404);
+        }
 
-        // Tạo thông báo cho khách hàng
-        Notification::create([
-            'user_id' => $datSan->user->id,
-            'noi_dung' => "Yêu cầu đặt sân '{$datSan->san->ten_san}' của bạn đã được duyệt. Vui lòng thanh toán.",
-            'da_doc' => false
+        // Số tiền
+        $amount = $datSan->tong_gia ?? 0;
+        if ($amount < 1000) {
+            return response()->json(['message' => 'Giá trị thanh toán không hợp lệ'], 400);
+        }
+
+        // Tạo mã đơn hàng VNPay
+        $orderCode = 'DS' . random_int(100000, 999999);
+
+        $vnp_TmnCode    = config('vnpay.vnp_TmnCode');
+        $vnp_HashSecret = config('vnpay.vnp_HashSecret');
+        $vnp_Url        = config('vnpay.vnp_Url');
+        $vnp_ReturnUrl  = config('vnpay.vnp_Returnurl');
+
+        $inputData = [
+            'vnp_Version'   => '2.1.0',
+            'vnp_TmnCode'   => $vnp_TmnCode,
+            'vnp_Amount'    => $amount * 100,
+            'vnp_Command'   => 'pay',
+            'vnp_CreateDate'=> now()->format('YmdHis'),
+            'vnp_CurrCode'  => 'VND',
+            'vnp_IpAddr'    => $request->ip(),
+            'vnp_Locale'    => 'vn',
+            'vnp_OrderInfo' => 'Thanh toán đặt sân #' . $datSanId,
+            'vnp_OrderType' => 'billpayment',
+            'vnp_ReturnUrl' => $vnp_ReturnUrl,
+            'vnp_TxnRef'    => $orderCode,
+        ];
+
+        ksort($inputData);
+        $query    = http_build_query($inputData);
+        $secureHash = hash_hmac('sha512', $query, $vnp_HashSecret);
+
+        $paymentUrl = $vnp_Url . '?' . $query . '&vnp_SecureHash=' . $secureHash;
+
+        // Lưu mapping order_code -> dat_san_id
+        Cache::put('vnp_order_' . $orderCode, [
+            'user_id'    => $user->id,
+            'dat_san_id' => $datSanId
+        ], now()->addMinutes(30));
+
+        return response()->json([
+            'success'     => true,
+            'payment_url' => $paymentUrl,
+            'order_code'  => $orderCode,
+            'dat_san_id'  => $datSanId
         ]);
-    } else {
-       try {
-    $datSan->trang_thai = 'da_huy';
-    $datSan->ly_do_tu_choi = $request->ly_do ?? 'Không có lý do';
-    $datSan->save();
 
-    if ($datSan->user && $datSan->san) {
-        Notification::create([
-            'user_id' => $datSan->user->id,
-            'noi_dung' => "Yêu cầu đặt sân '{$datSan->san->ten_san}' của bạn đã bị từ chối.",
-            'ly_do' => $datSan->ly_do_tu_choi,
-            'da_doc' => false
-        ]);
-    } else {
-        Log::warning('DatSan missing user or san: ID '.$datSan->id);
+    } catch (\Throwable $e) {
+        Log::error('VNPay taoThanhToanDatSan: ' . $e->getMessage());
+        return response()->json(['success' => false, 'message' => 'Lỗi server'], 500);
     }
-} catch (\Exception $e) {
-    Log::error('Lỗi khi từ chối DatSan ID '.$datSan->id.': '.$e->getMessage());
-    return response()->json([
-        'success' => false,
-        'message' => 'Xảy ra lỗi server khi từ chối yêu cầu.'
-    ], 500);
 }
 
-        
+    /**
+     * VNPay return URL (xác thực, lưu DB và chuyển hướng về frontend)
+     */
+    public function vnpayReturnDatSan(Request $request)
+{
+    try {
+        $inputData = $request->all();
+        $vnp_HashSecret = config('vnpay.vnp_HashSecret');
+
+        $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
+        unset($inputData['vnp_SecureHash'], $inputData['vnp_SecureHashType']);
+
+        ksort($inputData);
+        $hashData = urldecode(http_build_query($inputData));
+        $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+
+        // Frontend return page
+        $frontendUrl = env('URL_FRONTEND_DAT_SAN_RETURN',
+            'http://localhost/HeThongChoThueSanTheThao/frontend/customer/vnpay_return.php'
+        );
+
+        // Nếu hợp lệ
+        if ($secureHash === $vnp_SecureHash &&
+            ($inputData['vnp_ResponseCode'] ?? '') === '00') {
+
+            $orderCode = $inputData['vnp_TxnRef'] ?? null;
+            $meta = $orderCode ? Cache::pull('vnp_order_' . $orderCode) : null;
+
+            $userId     = $meta['user_id']    ?? null;
+            $datSanId   = $meta['dat_san_id'] ?? null;
+
+            if ($datSanId && $userId) {
+                // Lưu thanh toán DB
+                DB::table('thanh_toan')->insert([
+                    'dat_san_id' => $datSanId,
+                    'user_id'    => $userId,
+                    'so_tien'    => $inputData['vnp_Amount'] / 100,
+                    'ma_giao_dich' => $inputData['vnp_TransactionNo'] ?? '',
+                    'ngan_hang'  => $inputData['vnp_BankCode'] ?? '',
+                    'ngay_tt'    => now(),
+                    'trang_thai' => 'thanh_cong'
+                ]);
+
+                // Cập nhật trạng thái đặt sân
+                DB::table('dat_san')->where('id', $datSanId)
+                    ->update(['trang_thai' => 'da_thanh_toan']);
+            }
+        }
+
+        // Redirect về frontend
+        return redirect($frontendUrl . '?' . http_build_query($request->all()));
+
+    } catch (\Throwable $e) {
+        Log::error('VNPay vnpayReturnDatSan: ' . $e->getMessage());
+        $frontendUrl = env('URL_FRONTEND_DAT_SAN_RETURN',
+            'http://localhost/HeThongChoThueSanTheThao/frontend/customer/vnpay_return.php');
+        return redirect($frontendUrl . '?status=fail&message=' . urlencode('Lỗi server'));
     }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Cập nhật trạng thái thành công',
-        'dat_san' => $datSan
-    ]);
-}
-public function getNotifications(Request $request)
-{
-    $user = $request->user();
-
-    $notifications = Notification::where('user_id', $user->id)
-        ->orderByDesc('created_at')
-        ->get(['id', 'noi_dung', 'ly_do', 'da_doc', 'created_at']);
-
-    $unreadCount = $notifications->where('da_doc', 0)->count();
-
-    return response()->json([
-        'data' => $notifications,
-        'unread_count' => $unreadCount
-    ]);
-}
-public function markNotificationRead(Request $request)
-{
-    $request->validate([
-        'notification_id' => 'required|integer'
-    ]);
-
-    $user = $request->user();
-    $updated = DB::table('notifications')
-        ->where('id', $request->notification_id)
-        ->where('user_id', $user->id)
-        ->where('da_doc', 0)
-        ->update(['da_doc' => 1]);
-
-    return response()->json(['success' => (bool)$updated]);
 }
 
 }

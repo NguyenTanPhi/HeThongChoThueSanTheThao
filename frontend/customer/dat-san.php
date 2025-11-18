@@ -23,6 +23,7 @@ if (!$san || !is_array($san)) {
     die('<div class="alert alert-danger">Không tìm thấy sân!</div>');
 }
 
+
 // Khi submit, chuyển sang trang thanh toán
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: thanh-toan.php?san_id=$san_id&ngay=$ngay&gio_bat_dau=$gio_bat_dau&gio_ket_thuc=$gio_ket_thuc&gia=$giaKhungGio");

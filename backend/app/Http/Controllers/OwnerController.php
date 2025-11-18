@@ -338,7 +338,7 @@ class OwnerController extends Controller
 
             $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-            $frontendUrl = env('URL_FRONTEND', 'http://localhost/HeThongChoThueSanTheThao/frontend/owner/vnpay_return');
+            $frontendUrl = env('URL_FRONTEND', 'http://localhost/HeThongChoThueSanTheThao/frontend/owner/vnpay_return.php');
 
             // Nếu hợp lệ và thành công, lấy mapping theo order_code để lưu DB
             if ($secureHash === $vnp_SecureHash && ($inputData['vnp_ResponseCode'] ?? '') === '00') {
@@ -385,7 +385,7 @@ class OwnerController extends Controller
             }
         } catch (\Throwable $e) {
             Log::error('VNPay vnpayReturn error: ' . $e->getMessage());
-            $frontendUrl = env('URL_FRONTEND', 'http://localhost/HeThongChoThueSanTheThao/frontend/owner/vnpay_return');
+            $frontendUrl = env('URL_FRONTEND', 'http://localhost/HeThongChoThueSanTheThao/frontend/owner/vnpay_return.php');
             return redirect($frontendUrl . '?status=fail&message=' . urlencode('Lỗi server'));
         }
     }
