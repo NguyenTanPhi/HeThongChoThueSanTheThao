@@ -69,9 +69,52 @@ class AdminController extends Controller
     /**
      * Danh sách người dùng
      */
-    public function users()
-    {
-        $users = User::select('id', 'name', 'email', 'role', 'created_at')->get();
-        return response()->json($users);
+   public function users(Request $request)
+{
+    $query = User::query()
+        ->select('id', 'name', 'email', 'phone', 'role', 'status', 'created_at');
+
+    // Tìm kiếm
+    if ($search = $request->get('search')) {
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'LIKE', "%{$search}%")
+              ->orWhere('email', 'LIKE', "%{$search}%")
+              ->orWhere('phone', 'LIKE', "%{$search}%");
+        });
     }
+
+    $users = $query->paginate(15); // 15 người/trang
+
+    return response()->json([
+        'data' => $users->items(),
+        'total' => $users->total(),
+        'current_page' => $users->currentPage(),
+        'last_page' => $users->lastPage(),
+    ]);
+}
+public function updateUserStatus($id, Request $request)
+{
+    $request->validate([
+        'status' => 'required|in:active,locked'
+    ]);
+
+    $user = User::find($id);
+    if (!$user) {
+        return response()->json(['error' => 'Không tìm thấy người dùng'], 404);
+    }
+
+    // Không cho khóa admin
+    if ($user->role === 'admin') {
+        return response()->json(['error' => 'Không thể khóa tài khoản Admin!'], 403);
+    }
+
+    $user->status = $request->status;
+    $user->save();
+
+    return response()->json([
+        'message' => $request->status === 'locked' 
+            ? 'Đã khóa tài khoản thành công!' 
+            : 'Đã mở khóa tài khoản thành công!'
+    ]);
+}
 }

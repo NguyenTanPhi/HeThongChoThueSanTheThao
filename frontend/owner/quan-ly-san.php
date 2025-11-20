@@ -158,6 +158,10 @@
                     <div class="card-body text-center p-4">
                         <h4>Doanh thu hôm nay</h4>
                         <h2 class="display-5">₫<?= number_format($goiDichVu['doanh_thu_hom_nay'] ?? 0) ?></h2>
+                        <a href="thong-ke.php" class="btn btn-vip mt-3">
+    <i class="fas fa-chart-line"></i> Thống kê
+</a>
+
                     </div>
                 </div>
             </div>

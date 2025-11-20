@@ -43,7 +43,11 @@ if (is_string($rawResponse)) {
 <nav class="navbar navbar-expand-lg navbar-dark navbar-admin sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold fs-4" href="#">Admin: <?= htmlspecialchars($user['name']) ?></a>
+        <a href="dashboard.php" class="btn btn-light btn-lg">
+                    Quay lại Dashboard
+                </a>
         <a href="../logout.php" class="btn btn-outline-light">Đăng xuất</a>
+
     </div>
 </nav>
 

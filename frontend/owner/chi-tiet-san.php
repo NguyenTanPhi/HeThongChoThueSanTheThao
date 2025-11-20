@@ -261,11 +261,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tbody>`;
 
         data.forEach(item => {
-            const ngayVN = new Date(item.ngay).toLocaleDateString('vi-VN', {
-                weekday: 'short', day: '2-digit', month: '2-digit'
-            });
-            const gio = `${item.gio_bat_dau.slice(0,5)} - ${item.gio_ket_thuc.slice(0,5)}`;
-            const giaHienThi = item.gia ? Number(item.gia).toLocaleString('vi-VN') : 'Mặc định';
+             const now = new Date();
+
+    const start = new Date(item.ngay + " " + item.gio_bat_dau);
+    const end   = new Date(item.ngay + " " + item.gio_ket_thuc);
+
+    // Tính điểm giữa (1/2 thời gian)
+    const half = new Date(start.getTime() + (end.getTime() - start.getTime()) / 2);
+
+    // ❗ Đã quá 1/2 thời gian => ẩn slot lịch
+    if (now >= half) {
+        return;
+    }
+
+    const ngayVN = new Date(item.ngay).toLocaleDateString('vi-VN', {
+        weekday: 'short', day: '2-digit', month: '2-digit'
+    });
+
+    const gio = `${item.gio_bat_dau.slice(0,5)} - ${item.gio_ket_thuc.slice(0,5)}`;
+    const giaHienThi = item.gia ? Number(item.gia).toLocaleString('vi-VN') : 'Mặc định';
             
             html += `
                 <tr>

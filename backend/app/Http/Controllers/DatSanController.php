@@ -84,20 +84,6 @@ class DatSanController extends Controller
 
     return response()->json($data);
 }
-
-    /*public function danhSachChoDuyet(Request $request)
-    {
-        // Lấy sân của chủ
-        $sanChu = San::where('owner_id', $request->user()->id)->pluck('id');
-
-        $yeuCau = DatSan::with('user', 'san')
-            ->whereIn('san_id', $sanChu)
-            ->where('trang_thai', 'cho_duyet')
-            ->get();
-
-        return response()->json($yeuCau);
-    }
-    */
     public function chiTiet(Request $request, $id)
     {
         $datSan = DatSan::with('user', 'san')->findOrFail($id);
@@ -280,4 +266,50 @@ class DatSanController extends Controller
             return redirect($frontendUrl . '?status=fail&message=' . urlencode('Lỗi server'));
         }
     }
+    public function thongKe(Request $request)
+{
+    $ownerId = auth()->id();
+
+    $ngay  = $request->ngay;
+    $thang = $request->thang;
+    $nam   = $request->nam;
+    $from  = $request->from;
+    $to    = $request->to;
+
+    $query = DatSan::where('trang_thai', 'da_thanh_toan')
+        ->whereHas('san', function($q) use ($ownerId) {
+            $q->where('owner_id', $ownerId);
+        });
+
+    if ($ngay)  $query->whereDate('created_at', $ngay);
+if ($thang) $query->whereMonth('created_at', $thang);
+if ($nam)   $query->whereYear('created_at', $nam);
+if ($from && $to) $query->whereBetween('created_at', [$from, $to]);
+
+
+    $tongDoanhThu = $query->sum('tong_gia');
+    $tongDon = $query->count();
+    $lich = $query->with('san:id,ten_san')->get();
+
+    return response()->json([
+        'doanh_thu' => $tongDoanhThu,
+        'so_don'    => $tongDon,
+        'lich'      => $lich
+    ]);
+}
+public function customerMyBookings(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $bookings = DatSan::with(['san:id,ten_san,dia_chi,hinh_anh'])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $bookings
+        ]);
+    }
+
 }

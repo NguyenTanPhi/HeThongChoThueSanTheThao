@@ -32,12 +32,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/san/{id}', [SanController::class, 'show']);
     Route::post('/dat-san', [DatSanController::class, 'store']);
     Route::get('/lich-san/{san_id}/{ngay}', [DatSanController::class, 'lichTrong']);
+    Route::get('/customer/dat-san', [DatSanController::class, 'customerMyBookings']);
 
     // Owner routes – ĐÃ ĐÚNG VỊ TRÍ
     Route::middleware('role:owner')->prefix('owner')->group(function () {
         Route::post('/san', [SanController::class, 'store']);
         Route::get('/my-san', [SanController::class, 'mySan']);
         Route::get('/lich-su-dat', [DatSanController::class, 'lichSuDat']);
+        Route::get('/thong-ke', [DatSanController::class, 'thongKe']);
+
 
         // DI CHUYỂN VÀO ĐÂY – ĐÚNG!
         Route::get('/notifications', [OwnerController::class, 'getNotifications']);
@@ -54,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/san/cho-duyet', [AdminController::class, 'sanChoDuyet']);
         Route::post('/admin/san/{id}/duyet', [AdminController::class, 'duyetSan']);
         Route::get('/admin/users', [AdminController::class, 'users']);
+        Route::put('/admin/user/{id}/status', [AdminController::class, 'updateUserStatus']);
     });
 
     // Chủ sân xem danh sách gói
