@@ -15,7 +15,7 @@ $sanList = $response['data'] ?? [];
 // Danh sách quận
 $dsQuan = ['Quận 1','Quận 3','Quận 5','Quận 7','Quận 9','Quận 10','Quận 11','Bình Thạnh','Gò Vấp','Tân Bình','Phú Nhuận','Thủ Đức','Bình Tân','Tân Phú'];
 
-// === LỌC + GỌI LỊCH TRỐNG (GIỮ NGUYÊN LOGIC GỐC CỦA BẠN) ===
+// === LỌC + GỌI LỊCH TRỐNG + ĐÁNH GIÁ ===
 $ketqua = [];
 
 foreach ($sanList as $item) {
@@ -27,13 +27,17 @@ foreach ($sanList as $item) {
     // Lọc quận
     if ($quan !== '' && stripos($san['dia_chi'] ?? '', $quan) === false) continue;
 
-    // GỌI API LỊCH TRỐNG – GIỐNG HỆT FILE GỐC CỦA BẠN
+    // === LẤY ĐÁNH GIÁ CHO SÂN NÀY ===
+    $danhGiaRes = callAPI('GET', '/danh-gia/san/' . $san['id'], null, $_SESSION['token']);
+    $trungBinh = isset($danhGiaRes['trung_binh']) ? round($danhGiaRes['trung_binh'], 1) : 0;
+    $tongSo = $danhGiaRes['tong_so'] ?? 0;
+
+    // === LẤY LỊCH TRỐNG ===
     $lichRaw = callAPI('GET', "/customer/san/{$san['id']}/lich-trong", null, $_SESSION['token']);
     $lichTrong = [];
 
     if (isset($lichRaw['data'])) {
         $data = $lichRaw['data'];
-        // Xử lý cả mảng và object
         if (is_object($data)) $data = json_decode(json_encode($data), true);
         if (is_array($data)) {
             foreach ($data as $l) {
@@ -45,11 +49,14 @@ foreach ($sanList as $item) {
         }
     }
 
+    // Gắn thêm dữ liệu đánh giá + lịch
+    $san['trung_binh'] = $trungBinh;
+    $san['tong_danh_gia'] = $tongSo;
     $san['lich_trong'] = $lichTrong;
     $ketqua[] = $san;
 }
 
-// === SẮP XẾP – DÙNG HÀM THƯỜNG (KHÔNG DÙNG fn() ĐỂ TRÁNH LỖI PHP CŨ) ===
+// === SẮP XẾP – DÙNG FUNCTION THƯỜNG ĐỂ TƯƠNG THÍCH PHP CŨ ===
 if ($sort === 'gia_thap') {
     usort($ketqua, function($a, $b) {
         return ($a['gia_thue'] ?? 0) <=> ($b['gia_thue'] ?? 0);
@@ -62,6 +69,17 @@ if ($sort === 'gia_thap') {
     usort($ketqua, function($a, $b) {
         return strcmp($a['ten_san'] ?? '', $b['ten_san'] ?? '');
     });
+}
+
+// Hàm render sao (an toàn với PHP cũ)
+function renderStars($rating) {
+    $full = floor($rating);
+    $half = ($rating - $full >= 0.3) ? 1 : 0;
+    $empty = 5 - $full - $half;
+    $html = str_repeat('<i class="bi bi-star-fill text-warning"></i>', $full);
+    if ($half) $html .= '<i class="bi bi-star-half text-warning"></i>';
+    $html .= str_repeat('<i class="bi bi-star text-muted"></i>', $empty);
+    return $html;
 }
 
 // Hàm xử lý ảnh – giống hệt file gốc
@@ -94,7 +112,7 @@ function getImg($hinh_anh) {
         nav a:hover { color: #3498db; }
         .search-box { background: white; border-radius: 15px; padding: 1.5rem; box-shadow: 0 8px 25px rgba(0,0,0,0.1); margin: 2rem 0; }
         h2 { text-align: center; margin: 30px 0; color: #2c3e50; }
-        .san-card { background-color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px auto; padding: 20px; max-width: 700px; transition: 0.3s; }
+        .san-card { background-color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 20px auto; padding: 20px; max-width: 700px; transition: 0.3s; position:relative; }
         .san-card:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.18); }
         .san-card img { width: 100%; height: 250px; object-fit: cover; border-radius: 12px; }
         .san-card h3 { margin: 15px 0 10px; color: #2c3e50; }
@@ -103,6 +121,22 @@ function getImg($hinh_anh) {
         .san-card a:hover { background: #219653; }
         .badge-lich { margin: 4px; font-size: 0.9rem; padding: 0.5em 0.8em; }
         .result-count { font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-align: center; margin: 20px 0; }
+
+        /* PHẦN ĐÁNH GIÁ MỚI – ĐẸP LUNG LINH */
+        .rating-box {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            backdrop-filter: blur(5px);
+        }
+        .rating-stars { font-size: 1rem; margin-right: 3px; }
+        .rating-count { font-size: 0.75rem; opacity: 0.9; display: block; }
     </style>
 </head>
 <body>
@@ -131,16 +165,16 @@ function getImg($hinh_anh) {
                 <select name="quan" class="form-select form-select-lg">
                     <option value="">Tất cả quận</option>
                     <?php foreach ($dsQuan as $q): ?>
-                        <option value="<?= $q ?>" <?= $quan===$q?'selected':'' ?>><?= $q ?></option>
+                        <option value="<?= $q ?>" <?= $quan === $q ? 'selected' : '' ?>><?= $q ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-md-2">
                 <select name="sort" class="form-select form-select-lg">
                     <option value="">Sắp xếp</option>
-                    <option value="gia_thap" <?= $sort==='gia_thap'?'selected':'' ?>>Giá tăng dần</option>
-                    <option value="gia_cao" <?= $sort==='gia_cao'?'selected':'' ?>>Giá giảm dần</option>
-                    <option value="ten" <?= $sort==='ten'?'selected':'' ?>>Tên A → Z</option>
+                    <option value="gia_thap" <?= $sort === 'gia_thap' ? 'selected' : '' ?>>Giá tăng dần</option>
+                    <option value="gia_cao" <?= $sort === 'gia_cao' ? 'selected' : '' ?>>Giá giảm dần</option>
+                    <option value="ten" <?= $sort === 'ten' ? 'selected' : '' ?>>Tên A → Z</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -167,6 +201,15 @@ function getImg($hinh_anh) {
             $lichTrong = $san['lich_trong'] ?? [];
         ?>
         <div class="san-card">
+            <!-- ĐÁNH GIÁ NỔI BẬT TRÊN GÓC -->
+            <?php if (($san['tong_danh_gia'] ?? 0) > 0): ?>
+                <div class="rating-box">
+                    <span class="rating-stars"><?= renderStars($san['trung_binh'] ?? 0) ?></span>
+                    <strong><?= $san['trung_binh'] ?? 0 ?></strong>
+                    <div class="rating-count"><?= $san['tong_danh_gia'] ?? 0 ?> đánh giá</div>
+                </div>
+            <?php endif; ?>
+
             <img src="<?= $imgUrl ?>" alt="<?= htmlspecialchars($san['ten_san']) ?>">
             <h3><?= htmlspecialchars($san['ten_san']) ?></h3>
             <p>Giá: <strong class="text-success"><?= number_format($san['gia_thue'] ?? 0) ?>₫/giờ</strong></p>

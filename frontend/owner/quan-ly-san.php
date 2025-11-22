@@ -405,7 +405,7 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1 me-2">
                             <div class="small fw-bold ${!n.da_doc ? 'text-primary' : ''}">${n.noi_dung}</div>
-                            ${n.ly_do ? `<div class="text-danger small mt-1"><strong>Lý do:</strong> ${n.ly_do}</div>` : ''}
+                            ${n.ly_do ? `<div class="text-danger small mt-1"><strong>Nội dung:</strong> ${n.ly_do}</div>` : ''}
                         </div>
                         <small class="text-muted text-nowrap">${formatDate(n.created_at)}</small>
                     </div>

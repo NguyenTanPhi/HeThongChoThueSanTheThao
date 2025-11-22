@@ -1,0 +1,140 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class AdminReportController extends Controller
+{
+    /**
+     * Báo cáo doanh thu đặt sân
+     * Hỗ trợ lọc: ?from=2025-11-01&to=2025-11-30
+     */
+    public function baoCaoDatSan(Request $request)
+    {
+        $query = DB::table('dat_san')
+            ->join('san', 'dat_san.san_id', '=', 'san.id')
+            ->join('nguoi_dung', 'dat_san.user_id', '=', 'nguoi_dung.id')
+            ->leftJoin('thanh_toan', 'dat_san.id', '=', 'thanh_toan.dat_san_id')
+            ->where('dat_san.trang_thai', 'da_thanh_toan')
+            ->select(
+                'dat_san.id as dat_san_id',
+                'san.ten_san',
+                'nguoi_dung.name as nguoi_dat',
+                'dat_san.ngay_dat',
+                'dat_san.gio_bat_dau',
+                'dat_san.gio_ket_thuc',
+                'dat_san.tong_gia as so_tien'
+            );
+
+        // Bộ lọc theo khoảng thời gian (dựa vào ngày đặt)
+        if ($request->filled('from')) {
+            $query->whereDate('dat_san.ngay_dat', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('dat_san.ngay_dat', '<=', $request->to);
+        }
+
+        $data = $query->orderBy('dat_san.id', 'DESC')->get();
+
+        return response()->json($data);
+    }
+
+    /**
+     * Báo cáo doanh thu gói dịch vụ
+     * Hỗ trợ lọc: ?from=2025-11-01&to=2025-11-30
+     */
+    public function baoCaoGoiDichVu(Request $request)
+    {
+        $query = DB::table('goidamua')
+            ->join('goidichvu', 'goidamua.goi_id', '=', 'goidichvu.id')
+            ->join('nguoi_dung', 'goidamua.nguoi_dung_id', '=', 'nguoi_dung.id')
+            ->select(
+                'goidamua.id',
+                'goidichvu.ten_goi',
+                'nguoi_dung.name as nguoi_dung',
+                'goidamua.ngay_mua',
+                'goidamua.ngay_het',
+                'goidichvu.gia'
+            );
+
+        // Bộ lọc theo ngày mua gói
+        if ($request->filled('from')) {
+            $query->whereDate('goidamua.ngay_mua', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('goidamua.ngay_mua', '<=', $request->to);
+        }
+
+        $data = $query->orderBy('goidamua.id', 'DESC')->get();
+
+        return response()->json($data);
+    }
+
+    /**
+     * Thống kê cho Owner (giữ nguyên như cũ - đã hỗ trợ lọc tốt)
+     */
+    public function thongKe(Request $request)
+    {
+        $ownerId = $request->user()->id;
+
+        // Lấy danh sách sân của Owner
+        $sanIds = DB::table('san')
+            ->where('owner_id', $ownerId)
+            ->pluck('id');
+
+        if ($sanIds->isEmpty()) {
+            return response()->json([
+                "doanh_thu" => 0,
+                "so_don" => 0,
+                "lich" => []
+            ]);
+        }
+
+        // Query lọc dữ liệu
+        $query = DB::table('dat_san')
+            ->whereIn('san_id', $sanIds)
+            ->where('trang_thai', 'da_thanh_toan');
+
+        // Lọc theo ngày
+        if ($request->ngay) {
+            $query->whereDate('ngay_dat', $request->ngay);
+        }
+
+        // Lọc theo tháng
+        if ($request->thang) {
+            $query->whereMonth('ngay_dat', substr($request->thang, 5, 2));
+            $query->whereYear('ngay_dat', substr($request->thang, 0, 4));
+        }
+
+        // Lọc theo năm
+        if ($request->nam) {
+            $query->whereYear('ngay_dat', $request->nam);
+        }
+
+        // Lọc theo khoảng ngày
+        if ($request->filled('from') && $request->filled('to')) {
+            $query->whereBetween('ngay_dat', [$request->from, $request->to]);
+        }
+
+        // Lấy danh sách đơn
+        $lich = $query
+            ->join('san', 'dat_san.san_id', '=', 'san.id')
+            ->select(
+                'dat_san.*',
+                'san.ten_san'
+            )
+            ->orderBy('dat_san.created_at', 'DESC')
+            ->get();
+
+        // Tính doanh thu
+        $tongDoanhThu = $lich->sum('tong_gia');
+
+        return response()->json([
+            "doanh_thu" => $tongDoanhThu,
+            "so_don" => $lich->count(),
+            "lich" => $lich
+        ]);
+    }
+}

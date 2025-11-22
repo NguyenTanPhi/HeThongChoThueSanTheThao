@@ -7,9 +7,11 @@ use App\Http\Controllers\SanController;
 use App\Http\Controllers\DatSanController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\GoiDichVuController;
+use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\CustomerSanController;
-use App\Models\DatSan;
+use App\Http\Controllers\DanhGiaController;
+
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -26,6 +28,11 @@ Route::get('/customer/vnpay_return', [DatSanController::class, 'vnpayReturnDatSa
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/me', [AuthController::class, 'me']);
+     Route::get('/admin/bao-cao/dat-san', [AdminReportController::class, 'baoCaoDatSan']);
+    Route::get('/admin/bao-cao/goi-dich-vu', [AdminReportController::class, 'baoCaoGoiDichVu']);
+    Route::get('/danh-gia/check', [DanhGiaController::class, 'checkDaDanhGia']);
+    Route::post('/danh-gia', [DanhGiaController::class, 'store']);
+    Route::get('/danh-gia/san/{san_id}', [DanhGiaController::class, 'getBySan']);
 
     // Customer routes
     Route::get('/san', [SanController::class, 'index']);
