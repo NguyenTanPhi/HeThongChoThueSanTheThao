@@ -28,7 +28,7 @@ Route::get('/customer/vnpay_return', [DatSanController::class, 'vnpayReturnDatSa
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/me', [AuthController::class, 'me']);
-     Route::get('/admin/bao-cao/dat-san', [AdminReportController::class, 'baoCaoDatSan']);
+    Route::get('/admin/bao-cao/dat-san', [AdminReportController::class, 'baoCaoDatSan']);
     Route::get('/admin/bao-cao/goi-dich-vu', [AdminReportController::class, 'baoCaoGoiDichVu']);
     Route::get('/danh-gia/check', [DanhGiaController::class, 'checkDaDanhGia']);
     Route::post('/danh-gia', [DanhGiaController::class, 'store']);

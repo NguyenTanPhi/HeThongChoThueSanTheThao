@@ -8,6 +8,14 @@ if (!$id) die('<div class="alert alert-danger text-center p-5">Thiếu ID sân!<
 $san = callAPI('GET', '/san/' . $id, null, $_SESSION['token']);
 if (!$san || !isset($san['id'])) die('<div class="alert alert-danger text-center p-5">Không tìm thấy sân!</div>');
 
+// LẤY LỊCH TRỐNG
+$lichTrongRes = callAPI('GET', '/san/' . $id . '/lich-trong', null, $_SESSION['token']);
+$lichTrong = [];
+if ($lichTrongRes && is_array($lichTrongRes)) {
+    $lichTrong = $lichTrongRes;
+}
+
+
 // LẤY ĐÁNH GIÁ
 $danhGiaRes = callAPI('GET', '/danh-gia/san/' . $id, null, $_SESSION['token']);
 
@@ -151,6 +159,7 @@ function renderStars($rating): string {
             .rating-box { top: 15px; left: 15px; padding: 14px 18px; }
             .rating-box strong { font-size: 2.2rem; }
         }
+        
     </style>
 </head>
 <body>
@@ -221,7 +230,42 @@ function renderStars($rating): string {
                     </div>
                 </div>
             </div>
+<!-- LỊCH TRỐNG (GIỮ NGUYÊN NHƯ CŨ) -->
+    <h3 class="mb-4 text-center">Lịch trống hiện có</h3>
+    <?php if (!empty($lichTrong)): ?>
+        <div class="row g-4">
+            <?php foreach ($lichTrong as $lich): ?>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="slot-card p-4 bg-white rounded-4 shadow-sm border text-center h-100">
+    <div class="slot-date fw-bold fs-5 mb-2 text-primary">
+        <?= date('d/m', strtotime($lich['ngay'])) ?>
+        <small class="d-block text-muted"><?= ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'][date('w', strtotime($lich['ngay']))] ?></small>
+    </div>
+    <div class="slot-time text-dark fw-bold fs-4 mb-2">
+        <?= substr($lich['gio_bat_dau'],0,5) ?> - <?= substr($lich['gio_ket_thuc'],0,5) ?>
+    </div>
+    <div class="slot-price text-success fw-bold fs-5 mb-3">
+        <?= number_format($lich['gia'] ?? $san['gia_thue']) ?>₫
+    </div>
+    <button class="btn btn-danger w-100 fw-bold btn-xoa-lich" 
+        data-san="<?= $san['id'] ?>" 
+        data-lich="<?= $lich['id'] ?>" 
+        data-bs-toggle="modal" 
+        data-bs-target="#confirmDeleteModal">
+    <i class="bi bi-trash"></i> Xóa
+</button>
 
+
+</div>
+
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <div class="text-center py-5 bg-white rounded-4 shadow">
+            <h5 class="text-muted">Hiện chưa có khung giờ trống</h5>
+        </div>
+    <?php endif; ?>
             <!-- ĐÁNH GIÁ KHÁCH HÀNG – ĐẸP NHƯ CUSTOMER: TÊN + SAO CHUNG 1 DÒNG -->
             <div class="mt-5">
                 <h3 class="fw-bold mb-4 text-primary">
@@ -283,7 +327,94 @@ function renderStars($rating): string {
         </div>
     </div>
 </div>
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i> Xác nhận xóa</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center p-4">
+        <p class="fs-5 mb-3">Bạn có chắc chắn muốn xóa lịch trống này?</p>
+        <p class="text-muted">Hành động này không thể hoàn tác.</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Xóa</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg text-center">
+      <div class="modal-header bg-success text-white justify-content-center">
+        <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i> Thành công</h5>
+      </div>
+      <div class="modal-body p-4">
+        <p class="fs-5 mb-0">Đã xóa lịch trống thành công!</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let sanIdToDelete = null, lichIdToDelete = null;
+
+  document.querySelectorAll('.btn-xoa-lich').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sanIdToDelete = btn.dataset.san;
+      lichIdToDelete = btn.dataset.lich;
+    });
+  });
+
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', async () => {
+      if (!sanIdToDelete || !lichIdToDelete) return;
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/owner/san/${sanIdToDelete}/lich-trong/${lichIdToDelete}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer <?= $_SESSION['token'] ?>',
+            'Accept': 'application/json'
+          }
+        });
+        if (res.ok) {
+          document.querySelector(`.btn-xoa-lich[data-lich="${lichIdToDelete}"]`).closest('.slot-card').remove();
+          bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
+          new bootstrap.Modal(document.getElementById('successModal')).show();
+        } else {
+          new bootstrap.Modal(document.getElementById('successModal')).show();
+        document.querySelector('#successModal .modal-body').innerHTML = '<p class="fs-5 mb-0 text-danger">Xóa thất bại!</p>';
+        }
+      } catch (e) {
+        new bootstrap.Modal(document.getElementById('successModal')).show();
+  document.querySelector('#successModal .modal-body').innerHTML = '<p class="fs-5 mb-0 text-danger">Có lỗi xảy ra khi gọi API.</p>';
+      }
+    });
+  }
+
+  function showToast(message, type) {
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast align-items-center text-bg-${type} border-0`;
+    toastEl.role = 'alert';
+    toastEl.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>`;
+    document.body.appendChild(toastEl);
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+  }
+});
+</script>
 </body>
 </html>

@@ -123,7 +123,7 @@ if ($status === 'success' && $orderCode && $datSanId) {
 
         <hr>
 
-        <a href="lich-su-dat-san.php" class="btn btn-primary mt-4">
+        <a href="lich-su-dat.php" class="btn btn-primary mt-4">
             <i class="fas fa-arrow-left"></i> Quay về lịch sử đặt sân
         </a>
     </div>
