@@ -18,5 +18,5 @@ class GoiDichVu extends Model
         'trang_thai'
     ];
 
-    public $timestamps = false; // bảng này không có created_at, updated_at
+    public $timestamps = false;
 }

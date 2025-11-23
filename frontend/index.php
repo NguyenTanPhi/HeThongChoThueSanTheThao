@@ -139,8 +139,8 @@ if (isset($_SESSION['user'])) {
             <div class="logo">
                 <i class="fas fa-futbol"></i>
             </div>
-            <h1>ĐẶT SÂN BÓNG ĐÁ</h1>
-            <p>Hệ thống đặt sân bóng chuyên nghiệp – Nhanh chóng – An toàn – Uy tín</p>
+            <h1>ĐẶT SÂN THỂ THAO</h1>
+            <p>Hệ thống đặt sân thể thao chuyên nghiệp – Nhanh chóng – An toàn – Uy tín</p>
         </div>
 
         <div class="card-body">

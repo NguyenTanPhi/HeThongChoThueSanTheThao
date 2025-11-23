@@ -143,7 +143,7 @@ function getImg($hinh_anh) {
 
 <header>
     <div class="container">
-        <h1 class="text-center mb-0">Xin chào, <?= htmlspecialchars($user['name']) ?> (Khách hàng)</h1>
+        <h1 class="text-center mb-0">Hệ thống cho thuê sân thể thao chuyên nghiệp</h1>
     </div>
 </header>
 

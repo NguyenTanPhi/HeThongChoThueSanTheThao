@@ -7,10 +7,6 @@ use Illuminate\Support\Facades\DB;
 
 class AdminReportController extends Controller
 {
-    /**
-     * Báo cáo doanh thu đặt sân
-     * Hỗ trợ lọc: ?from=2025-11-01&to=2025-11-30
-     */
     public function baoCaoDatSan(Request $request)
     {
         $query = DB::table('dat_san')
@@ -28,7 +24,7 @@ class AdminReportController extends Controller
                 'dat_san.tong_gia as so_tien'
             );
 
-        // Bộ lọc theo khoảng thời gian (dựa vào ngày đặt)
+        //Bộ lọc theo thời gian
         if ($request->filled('from')) {
             $query->whereDate('dat_san.ngay_dat', '>=', $request->from);
         }
@@ -41,10 +37,6 @@ class AdminReportController extends Controller
         return response()->json($data);
     }
 
-    /**
-     * Báo cáo doanh thu gói dịch vụ
-     * Hỗ trợ lọc: ?from=2025-11-01&to=2025-11-30
-     */
     public function baoCaoGoiDichVu(Request $request)
     {
         $query = DB::table('goidamua')
@@ -59,7 +51,7 @@ class AdminReportController extends Controller
                 'goidichvu.gia'
             );
 
-        // Bộ lọc theo ngày mua gói
+        //Bộ lọc theo ngày mua gói
         if ($request->filled('from')) {
             $query->whereDate('goidamua.ngay_mua', '>=', $request->from);
         }
@@ -72,14 +64,12 @@ class AdminReportController extends Controller
         return response()->json($data);
     }
 
-    /**
-     * Thống kê cho Owner (giữ nguyên như cũ - đã hỗ trợ lọc tốt)
-     */
+    //Thống kê
     public function thongKe(Request $request)
     {
         $ownerId = $request->user()->id;
 
-        // Lấy danh sách sân của Owner
+        //Lấy danh sách sân của Owner
         $sanIds = DB::table('san')
             ->where('owner_id', $ownerId)
             ->pluck('id');

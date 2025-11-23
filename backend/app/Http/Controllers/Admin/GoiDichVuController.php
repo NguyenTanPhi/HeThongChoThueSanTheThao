@@ -1,20 +1,17 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\GoiDichVu;
 
 class GoiDichVuController extends Controller
 {
-    // 🟢 Lấy danh sách tất cả gói dịch vụ
+    //Lấy danh sách tất cả gói dịch vụ
     public function index()
     {
         return response()->json(GoiDichVu::orderBy('id', 'desc')->get());
     }
-
-    // 🟢 Thêm gói mới
+    //Thêm gói mới
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -32,7 +29,7 @@ class GoiDichVuController extends Controller
         ]);
     }
 
-    // 🟡 Cập nhật gói dịch vụ
+    //Sửa gói dịch vụ
     public function update(Request $request, $id)
     {
         $goi = GoiDichVu::findOrFail($id);
@@ -53,7 +50,7 @@ class GoiDichVuController extends Controller
         ]);
     }
 
-    // 🔴 Xóa gói dịch vụ
+    //Xóa gói dịch vụ
     public function destroy($id)
     {
         $goi = GoiDichVu::find($id);

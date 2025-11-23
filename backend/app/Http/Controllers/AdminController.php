@@ -36,8 +36,8 @@ class AdminController extends Controller
 
         $san->save();
 
-        // === GỬI THÔNG BÁO CHO CHỦ SÂN ===
-        $owner = $san->owner; // Đã load từ with('owner')
+        //Gửi thông báo cho chủ sân
+        $owner = $san->owner;
 
         if ($owner) {
             $noi_dung = '';
@@ -66,9 +66,7 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Danh sách người dùng
-     */
+    //Danh sách người dùng
    public function users(Request $request)
 {
     $query = User::query()
@@ -83,7 +81,7 @@ class AdminController extends Controller
         });
     }
 
-    $users = $query->paginate(15); // 15 người/trang
+    $users = $query->paginate(15); 
 
     return response()->json([
         'data' => $users->items(),

@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\DanhGia;
 use App\Models\San;
-use App\Models\Notification; // ← Đảm bảo có dòng này
+use App\Models\Notification; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DanhGiaController extends Controller
 {
-    // Kiểm tra người dùng đã đánh giá sân này chưa
+    //Kiểm tra đánh giá hay chưa
     public function checkDaDanhGia(Request $request)
     {
         $nguoi_dung_id = $request->query('nguoi_dung_id') ?? auth()->id();
@@ -28,7 +28,7 @@ class DanhGiaController extends Controller
         return response()->json(['da_danh_gia' => $exists]);
     }
 
-    // LƯU ĐÁNH GIÁ + GỬI THÔNG BÁO CHO CHỦ SÂN
+    //Lưu đánh giá và gửi tb cho owner
     public function store(Request $request)
     {
         $user = $request->user();
@@ -65,13 +65,13 @@ class DanhGiaController extends Controller
             'noi_dung'      => $request->noi_dung,
         ]);
 
-        // === GỬI THÔNG BÁO CHO CHỦ SÂN – DÙNG ĐÚNG CẤU TRÚC BẢNG HIỆN TẠI ===
+        //Gửi thông báo cho owner
         $san = San::find($san_id);
         if ($san && $san->owner_id) {
             Notification::create([
                 'user_id'  => $san->owner_id,
                 'noi_dung' => "Khách hàng {$user->name} vừa đánh giá sân \"{$san->ten_san}\" – {$request->diem_danh_gia}★",
-                'ly_do'    => $request->noi_dung,   // Nội dung đánh giá chi tiết
+                'ly_do'    => $request->noi_dung,
                 'da_doc'   => 0,
             ]);
         }
@@ -83,7 +83,7 @@ class DanhGiaController extends Controller
         ], 201);
     }
 
-    // Lấy đánh giá của sân (đã có sẵn – giữ nguyên)
+    //Lấy đánh giá của sân
     public function getBySan($san_id)
     {
         $danhGia = DB::table('danh_gia')

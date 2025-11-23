@@ -192,7 +192,7 @@
                                     <th>Loại sân</th>
                                     <th>Giá thuê</th>
                                     <th>Địa chỉ</th>
-                                    <th>Trạng thái duyệt</th>
+                                    <th>Trạng thái</th>
                                     <th>Hành động</th>
                                 </tr>
                             </thead>
@@ -247,7 +247,7 @@
     <div clas<div class="col-12 mt-4">
         <div class="card card-custom">
             <div class="card-header bg-success text-white">
-                <h4 class="mb-0">Lịch đặt sân (Đã Thanh Toán)</h4>
+                <h4 class="mb-0">Danh sách đơn được thuê</h4>
             </div>
             <div class="card-body">
                 <?php 
@@ -311,7 +311,6 @@
     </div>
 
 
-    <!-- JS DUYỆT YÊU CẦU -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

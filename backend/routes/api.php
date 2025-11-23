@@ -18,7 +18,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-// Route VNPay return đặt ngoài auth:sanctum để VNPay redirect vào không cần token
+// Route VNPay return
 Route::get('/vnpay_return', [OwnerController::class, 'vnpayReturn']);
 Route::get('/customer/vnpay_return', [DatSanController::class, 'vnpayReturnDatSan']);
 
@@ -41,19 +41,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/lich-san/{san_id}/{ngay}', [DatSanController::class, 'lichTrong']);
     Route::get('/customer/dat-san', [DatSanController::class, 'customerMyBookings']);
 
-    // Owner routes – ĐÃ ĐÚNG VỊ TRÍ
+    // Owner routes
     Route::middleware('role:owner')->prefix('owner')->group(function () {
         Route::post('/san', [SanController::class, 'store']);
         Route::get('/my-san', [SanController::class, 'mySan']);
         Route::get('/lich-su-dat', [DatSanController::class, 'lichSuDat']);
         Route::get('/thong-ke', [DatSanController::class, 'thongKe']);
-
-
-        // DI CHUYỂN VÀO ĐÂY – ĐÚNG!
         Route::get('/notifications', [OwnerController::class, 'getNotifications']);
         Route::post('/notifications/{id}/read', [OwnerController::class, 'markNotificationRead']);
-    }); // <-- ĐÓNG ĐÚNG
-    // CÁC ROUTE SỬ DỤNG /san/{id} TRỰC TIẾP – KHÔNG CẦN /owner
+    });
+
+   
     Route::middleware('role:owner')->group(function () {
         Route::put('/san/{id}', [SanController::class, 'update']);
         Route::delete('/san/{id}', [SanController::class, 'destroy']);
@@ -78,9 +76,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/goi-dich-vu/{id}', [GoiDichVuController::class, 'destroy']);
     });
 
-    // Owner duyệt đặt sân
-    Route::post('/owner/mua-goi', [OwnerController::class, 'muaGoi']);
-    Route::post('/owner/check-thanh-toan/{orderId}', [OwnerController::class, 'checkThanhToan']);
+
+ 
     Route::get('/owner/goi-hien-tai', [OwnerController::class, 'goiHienTai']);
     Route::post('/owner/thanh-toan', [OwnerController::class, 'taoThanhToan']);
 
@@ -101,8 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/san/{id}', [CustomerSanController::class, 'show']);
         Route::get('/san/{id}/lich-trong', [CustomerSanController::class, 'lichTrong']);
         Route::post('/dat-san-thanh-toan', [DatSanController::class, 'taoThanhToanDatSan']);
-        Route::post('/check-thanh-toan/{orderId}', [DatSanController::class, 'checkThanhToan']);
     });
 
     Route::put('/update-profile', [AuthController::class, 'updateProfile']);
-}); // <-- ĐÓNG TOÀN BỘ auth:sanctum
+});

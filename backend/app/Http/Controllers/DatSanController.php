@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\DatSan;
 use App\Models\LichSan;
-use App\Models\San;
-use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;

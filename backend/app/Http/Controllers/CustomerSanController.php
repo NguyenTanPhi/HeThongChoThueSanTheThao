@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\San;
 use App\Models\LichSan;
 
 class CustomerSanController extends Controller
 {
-    /**
-     * 📋 Danh sách sân bóng
-     */
+    //Danh sách sân
     public function index()
     {
         $sanList = San::where('trang_thai', 'hoat_dong')
@@ -20,9 +17,7 @@ class CustomerSanController extends Controller
         return response()->json(['data' => $sanList]);
     }
 
-    /**
-     * 📋 Chi tiết sân
-     */
+    //Chi tiết sân
     public function show($id)
     {
         $san = San::with('owner', 'danhGia')->find($id);
@@ -34,10 +29,7 @@ class CustomerSanController extends Controller
         return response()->json(['data' => $san]);
     }
 
-    /**
-     * 📋 Lấy lịch trống của sân cho khách hàng
-     * Chỉ hiển thị các khung giờ mà chủ sân đã khai báo
-     */
+    //Lịch trống
     public function lichTrong($id)
     {
         $san = San::find($id);
@@ -48,7 +40,7 @@ class CustomerSanController extends Controller
         // Lấy các khung giờ trống do chủ sân đăng
         $lichTrong = LichSan::where('san_id', $id)
                              ->where('ngay', '>=', now()->format('Y-m-d'))
-                             ->where('trang_thai', 'trong') // chỉ lấy slot trống
+                             ->where('trang_thai', 'trong')
                              ->orderBy('ngay', 'asc')
                              ->orderBy('gio_bat_dau', 'asc')
                              ->get(['ngay', 'gio_bat_dau', 'gio_ket_thuc', 'gia']);

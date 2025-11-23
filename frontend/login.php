@@ -200,7 +200,7 @@ if ($_POST) {
     <div class="login-card">
         <div class="card-header">
             <h2>ĐĂNG NHẬP</h2>
-            <p>Chào mừng bạn đến với hệ thống đặt sân bóng đá</p>
+            <p>Chào mừng bạn đến với hệ thống đặt sân thể thao</p>
         </div>
 
         <div class="card-body">

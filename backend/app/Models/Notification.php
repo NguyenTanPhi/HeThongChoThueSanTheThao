@@ -9,10 +9,8 @@ class Notification extends Model
 {
     use HasFactory;
 
-    // Tên bảng trong DB
     protected $table = 'notifications';
 
-    // Các trường có thể gán giá trị hàng loạt
     protected $fillable = [
         'user_id',
         'noi_dung',
@@ -20,14 +18,11 @@ class Notification extends Model
         'ly_do'
     ];
 
-    // Trường kiểu boolean
     protected $casts = [
         'da_doc' => 'boolean',
     ];
 
-    /**
-     * Người nhận thông báo
-     */
+     // Người nhận thông báo
     public function user()
     {
         return $this->belongsTo(User::class);

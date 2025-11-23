@@ -48,14 +48,12 @@ class SanController extends Controller
         ->first();
 
     if (!$goi) {
-        // CHECKMARK TRẢ JSON THAY VÌ REDIRECT
         return response()->json([
             'require_package' => true,
             'package_message' => 'Bạn cần mua hoặc gia hạn gói dịch vụ để thêm sân mới.'
         ], 200);
     }
 
-    // XÁC THỰC DỮ LIỆU
     $request->validate([
         'ten_san' => 'required|string|max:255',
         'loai_san' => 'required|string',
@@ -76,7 +74,6 @@ class SanController extends Controller
 
     San::create($data);
 
-    // CHECKMARK TRẢ JSON THÀNH CÔNG THAY VÌ REDIRECT
     return response()->json([
         'success' => true,
         'message' => 'Gửi yêu cầu mở sân thành công! Vui lòng chờ quản trị viên duyệt trong vòng 24h.'
@@ -86,7 +83,6 @@ class SanController extends Controller
     public function mySan()
 {
     try {
-        // DÙNG SANCTUM GUARD
         $user = Auth::guard('sanctum')->user();
 
         if (!$user) {
@@ -96,7 +92,7 @@ class SanController extends Controller
         $sanList = \App\Models\San::where('owner_id', $user->id)
             ->select('id', 'ten_san', 'loai_san', 'gia_thue', 'dia_chi', 'trang_thai_duyet')
             ->get()
-            ->toArray(); // ĐẢM BẢO LÀ MẢNG
+            ->toArray(); 
 
         return response()->json($sanList);
     } catch (\Exception $e) {
@@ -131,7 +127,6 @@ class SanController extends Controller
         ], 404);
     }
 
-    // XÓA ẢNH BẰNG UNLINK() — KHÔNG DÙNG STORAGE
     if ($san->hinh_anh) {
         $filePath = public_path('storage/' . $san->hinh_anh);
         if (file_exists($filePath)) {
@@ -148,7 +143,7 @@ class SanController extends Controller
 }
 
 
-// 1. CHỦ SÂN: LẤY LỊCH TRỐNG (kiểm tra gói)
+
 public function getLichTrong(Request $request, $id)
 {
     $user = $request->user();
@@ -181,7 +176,7 @@ public function getLichTrong(Request $request, $id)
     return response()->json($lich);
 }
 
-// 2. CHỦ SÂN: THÊM LỊCH TRỐNG
+
 public function themLichTrong(Request $request, $id)
 {
     $user = $request->user();
@@ -295,7 +290,7 @@ public function suaLichTrong(Request $request, $id, $lichId)
     ]);
 }
 
-// 3. CHỦ SÂN: XÓA LỊCH TRỐNG
+
 public function xoaLichTrong(Request $request, $id, $lichId)
 {
     $user = $request->user();
@@ -313,7 +308,6 @@ public function xoaLichTrong(Request $request, $id, $lichId)
     ]);
 }
 
-// 4. KHÁCH HÀNG: XEM LỊCH TRỐNG
 public function getLichTrongKhach($id)
 {
     $san = \App\Models\San::findOrFail($id);

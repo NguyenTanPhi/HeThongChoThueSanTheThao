@@ -13,6 +13,7 @@ class User extends Authenticatable
     protected $table = 'nguoi_dung';
     public $timestamps = false;
     protected $primaryKey = 'id';
+    protected $guard = 'web';
 
     protected $fillable = [
         'name', 'email', 'password', 'phone', 'google_id',
@@ -21,7 +22,6 @@ class User extends Authenticatable
 
     protected $hidden = ['password'];
 
-    // BẮT BUỘC: Laravel cần các hàm này
     public function getAuthIdentifierName()
     {
         return $this->getKeyName();
@@ -39,20 +39,19 @@ class User extends Authenticatable
 
     public function getRememberToken()
     {
-        return null; // không dùng remember_token
+        return null; 
     }
 
     public function setRememberToken($value)
     {
-        // không làm gì
+        
     }
-
     public function getRememberTokenName()
     {
         return '';
     }
 
-    // Quan hệ
+    //Quan hệ
     public function san()
     {
         return $this->hasMany(\App\Models\San::class, 'owner_id');
