@@ -5,35 +5,58 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:100',
-            'email' => 'required|email|unique:nguoi_dung,email',
-            'password' => 'required|min:6',
-            'phone' => 'nullable|string|max:20',
-            'role' => 'required|in:customer,owner,admin',
-        ]);
+{
+    $request->validate([
+        'name' => 'required|string|max:100',
+        'email' => 'required|email|unique:nguoi_dung,email',
+        'password' => 'required|min:6',
+        'phone' => 'nullable|string|max:20',
+        'role' => 'required|in:customer,owner,admin',
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'phone' => $request->phone,
-           'role' => $request->role,
-        ]);
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'phone' => $request->phone,
+        'role' => $request->role,
+    ]);
 
-        $token = $user->createToken('api')->plainTextToken;
+    // Nếu là chủ sân thì gửi mail xác nhận
+    if ($user->role === 'owner') {
+        Mail::to($user->email)->send(new \App\Mail\OwnerConfirmMail($user)); 
 
         return response()->json([
-            'message' => 'Đăng ký thành công',
-            'user' => $user,
-            'token' => $token
+            'success' => true,
+            'message' => 'Đăng ký thành công! Vui lòng kiểm tra email để xác nhận làm chủ sân.'
         ], 201);
     }
+
+    // Nếu là khách hàng thì trả về token đăng nhập luôn
+    $token = $user->createToken('api')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Đăng ký thành công',
+        'user' => $user,
+        'token' => $token
+    ], 201);
+}
+public function confirmOwner(Request $request)
+{
+    $user = User::where('email', $request->email)->firstOrFail();
+    $user->email_verified_at = now();
+    $user->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Xác nhận chủ sân thành công!'
+    ]);
+}
 
     public function login(Request $request)
     {

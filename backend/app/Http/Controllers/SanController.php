@@ -14,6 +14,7 @@ class SanController extends Controller
     public function index(Request $request)
     {
         $query = San::with('owner')
+        
             ->where('trang_thai_duyet', 'da_duyet')
             ->where('trang_thai', 'hoat_dong');
 
@@ -40,19 +41,21 @@ class SanController extends Controller
     $user = $request->user();
 
     // KIỂM TRA GÓI CÒN HẠN
-    $goi = DB::table('goidamua')
-        ->where('nguoi_dung_id', $user->id)
-        ->where('trang_thai', 'con_han')
-        ->whereDate('ngay_het', '>=', now())
-        ->orderByDesc('ngay_mua')
-        ->first();
+   $goi = DB::table('goidamua')
+    ->where('nguoi_dung_id', $user->id)
+    ->whereDate('ngay_het', '>=', now())
+    ->orderByDesc('ngay_het')
+    ->first();
 
-    if (!$goi) {
-        return response()->json([
-            'require_package' => true,
-            'package_message' => 'Bạn cần mua hoặc gia hạn gói dịch vụ để thêm sân mới.'
-        ], 200);
-    }
+if (!$goi) {
+    return response()->json([
+        'success' => false,
+        'require_package' => true,
+        'message' => 'Bạn cần có gói dịch vụ để thực hiện chức năng này!'
+    ], 403);
+}
+
+
 
     $request->validate([
         'ten_san' => 'required|string|max:255',
@@ -69,7 +72,8 @@ class SanController extends Controller
     $data['trang_thai'] = 'hoat_dong';
 
     if ($request->hasFile('hinh_anh')) {    
-        $data['hinh_anh'] = $request->file('hinh_anh')->store('san', 'public');
+        $data['hinh_anh'] = $request->file('hinh_anh')
+    ->storeAs('san', $request->file('hinh_anh')->getClientOriginalName(), 'public');
     }
 
     San::create($data);
@@ -90,7 +94,7 @@ class SanController extends Controller
         }
 
         $sanList = \App\Models\San::where('owner_id', $user->id)
-            ->select('id', 'ten_san', 'loai_san', 'gia_thue', 'dia_chi', 'trang_thai_duyet')
+            ->select('id', 'ten_san', 'loai_san', 'gia_thue', 'dia_chi', 'hinh_anh', 'trang_thai_duyet')
             ->get()
             ->toArray(); 
 
@@ -150,18 +154,19 @@ public function getLichTrong(Request $request, $id)
     
     // CHECK GÓI DỊCH VỤ
     $goi = DB::table('goidamua')
-        ->where('nguoi_dung_id', $user->id)
-        ->where('trang_thai', 'con_han')
-        ->whereDate('ngay_het', '>=', now())
-        ->exists();
+    ->where('nguoi_dung_id', $user->id)
+    ->whereDate('ngay_het', '>=', now())
+    ->orderByDesc('ngay_het')
+    ->first();
 
-    if (!$goi) {
-        return response()->json([
-            'success' => false,
-            'require_package' => true,
-            'message' => 'Bạn cần có gói dịch vụ để xem lịch trống!'
-        ], 403);
-    }
+if (!$goi) {
+    return response()->json([
+        'success' => false,
+        'require_package' => true,
+        'message' => 'Bạn cần có gói dịch vụ để thực hiện chức năng này!'
+    ], 403);
+}
+
 
     $san = \App\Models\San::where('id', $id)->where('owner_id', $user->id)->firstOrFail();
 
@@ -183,18 +188,19 @@ public function themLichTrong(Request $request, $id)
     
     // CHECK GÓI
     $goi = DB::table('goidamua')
-        ->where('nguoi_dung_id', $user->id)
-        ->where('trang_thai', 'con_han')
-        ->whereDate('ngay_het', '>=', now())
-        ->exists();
+    ->where('nguoi_dung_id', $user->id)
+    ->whereDate('ngay_het', '>=', now())
+    ->orderByDesc('ngay_het')
+    ->first();
 
-    if (!$goi) {
-        return response()->json([
-            'success' => false,
-            'require_package' => true,
-            'message' => 'Bạn cần mua gói để thêm lịch trống!'
-        ], 403);
-    }
+if (!$goi) {
+    return response()->json([
+        'success' => false,
+        'require_package' => true,
+        'message' => 'Bạn cần có gói dịch vụ để thực hiện chức năng này!'
+    ], 403);
+}
+
 
     $request->validate([
         'ngay' => 'required|date|after_or_equal:today',
@@ -238,10 +244,19 @@ public function suaLichTrong(Request $request, $id, $lichId)
 
     // Kiểm tra gói
     $goi = DB::table('goidamua')
-        ->where('nguoi_dung_id', $user->id)
-        ->where('trang_thai', 'con_han')
-        ->whereDate('ngay_het', '>=', now())
-        ->exists();
+    ->where('nguoi_dung_id', $user->id)
+    ->whereDate('ngay_het', '>=', now())
+    ->orderByDesc('ngay_het')
+    ->first();
+
+if (!$goi) {
+    return response()->json([
+        'success' => false,
+        'require_package' => true,
+        'message' => 'Bạn cần có gói dịch vụ để thực hiện chức năng này!'
+    ], 403);
+}
+
 
     if ($request->has('_method') && $request->input('_method') === 'PUT') {
         $request->merge(['_method' => 'PUT']);

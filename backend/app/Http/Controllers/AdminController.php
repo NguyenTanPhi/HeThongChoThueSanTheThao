@@ -10,10 +10,15 @@ use App\Models\Notification;
 class AdminController extends Controller
 {
     public function sanChoDuyet()
-    {
-        $san = San::where('trang_thai_duyet', 'cho_duyet')->with('owner')->get();
-        return response()->json($san);
-    }
+{
+    $san = San::where('trang_thai_duyet', 'cho_duyet')
+        ->with(['owner'])
+        ->select('id', 'ten_san', 'loai_san', 'gia_thue', 'dia_chi', 'mo_ta', 'hinh_anh', 'owner_id')
+        ->get();
+
+    return response()->json($san);
+}
+
 
     public function duyetSan(Request $request, $id)
     {

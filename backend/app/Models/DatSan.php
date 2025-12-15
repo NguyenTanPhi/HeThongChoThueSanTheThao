@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class DatSan extends Model
 {
     protected $table = 'dat_san';
+    protected $appends = ['da_hoan_thanh'];
     public $timestamps = false;
 
     protected $fillable = [
@@ -27,4 +29,9 @@ class DatSan extends Model
     {
         return $this->hasOne(ThanhToan::class, 'dat_san_id');
     }
+    public function getDaHoanThanhAttribute()
+{
+    $end = Carbon::parse($this->ngay_dat . ' ' . $this->gio_ket_thuc);
+    return now()->greaterThanOrEqualTo($end);
+}
 }

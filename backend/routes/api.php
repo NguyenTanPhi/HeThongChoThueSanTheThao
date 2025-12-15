@@ -17,6 +17,7 @@ use App\Http\Controllers\DanhGiaController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::get('/owner/confirm', [AuthController::class, 'confirmOwner']);
 
 // Route VNPay return
 Route::get('/vnpay_return', [OwnerController::class, 'vnpayReturn']);
@@ -25,6 +26,10 @@ Route::get('/customer/vnpay_return', [DatSanController::class, 'vnpayReturnDatSa
 
 
 // Protected routes
+Route::get('/san', [SanController::class, 'index']);
+  Route::get('/san/{id}', [SanController::class, 'show']);
+  Route::get('/danh-gia/san/{san_id}', [DanhGiaController::class, 'getBySan']);
+  Route::get('/san/{id}/lich-trong', [SanController::class, 'getLichTrongKhach']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/me', [AuthController::class, 'me']);
@@ -32,11 +37,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/bao-cao/goi-dich-vu', [AdminReportController::class, 'baoCaoGoiDichVu']);
     Route::get('/danh-gia/check', [DanhGiaController::class, 'checkDaDanhGia']);
     Route::post('/danh-gia', [DanhGiaController::class, 'store']);
-    Route::get('/danh-gia/san/{san_id}', [DanhGiaController::class, 'getBySan']);
+    
 
     // Customer routes
-    Route::get('/san', [SanController::class, 'index']);
-    Route::get('/san/{id}', [SanController::class, 'show']);
+    
+  
     Route::post('/dat-san', [DatSanController::class, 'store']);
     Route::get('/lich-san/{san_id}/{ngay}', [DatSanController::class, 'lichTrong']);
     Route::get('/customer/dat-san', [DatSanController::class, 'customerMyBookings']);
@@ -89,8 +94,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/san/{id}/lich-trong/{lichId}', [SanController::class, 'xoaLichTrong']);
     });
 
-    // Khách hàng: xem lịch trống
-    Route::get('/san/{id}/lich-trong', [SanController::class, 'getLichTrongKhach']);
+   
+    
 
     // Customer routes
     Route::prefix('customer')->group(function () {

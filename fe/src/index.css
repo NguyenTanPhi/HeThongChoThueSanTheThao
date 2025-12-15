@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #10b981;  /* Xanh emerald cho nút, hero */
+  --color-secondary: #059669;
+  --color-accent: #047857;
+  --color-base-100: #f9fafb;  /* Nền xám nhạt đẹp */
+  --color-base-200: #e5e7eb;
+  --color-info: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --font-family-base: system-ui, -apple-system, sans-serif;
+  --border-radius: 0.5rem;  /* Bo góc đẹp */
+}
+
+@plugin "daisyui" {
+  themes: [
+    "emerald"  /* Theme chính cho sân bóng – xanh lá sang trọng */
+  ];
+}
+.pdf-export * {
+  color: #111 !important;
+  background-color: #fff !important;
+  border-color: #ddd !important;
+  box-shadow: none !important;
+  }
