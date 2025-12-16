@@ -1,9 +1,10 @@
 import React from "react";
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 
 // Layout components
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+
 
 // Pages
 import Home from "./pages/customer/Home.jsx";
@@ -75,10 +76,11 @@ function App() {
         <Route path="/owner/notifications" element={<Notification />} />
       </Route>
 
-      {/* Admin routes */}
-      <Route element={<OwnerLayout />}>
-        <Route path="/admin/dashboard" element={<DashboardAdmin />} />
-      </Route>
+     
+
+      {/* 🔥 BẮT BUỘC PHẢI CÓ */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+
     </Routes>
   );
 }

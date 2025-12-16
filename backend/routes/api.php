@@ -13,6 +13,8 @@ use App\Http\Controllers\CustomerSanController;
 use App\Http\Controllers\DanhGiaController;
 
 
+
+
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);

@@ -55,6 +55,7 @@ class ConnectionResolver implements ConnectionResolverInterface
      */
     public function addConnection($name, ConnectionInterface $connection)
     {
+        
         $this->connections[$name] = $connection;
     }
 

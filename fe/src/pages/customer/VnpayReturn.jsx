@@ -10,34 +10,31 @@ export default function VnpayReturn() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const responseCode = params.get("vnp_ResponseCode");
-    const orderCode = params.get("vnp_TxnRef");
-    const datSanId = params.get("datSanId");
-    const amount = parseInt(params.get("vnp_Amount") || "0") / 100;
+  const params = new URLSearchParams(location.search);
+  const responseCode = params.get("vnp_ResponseCode");
+  const orderCode = params.get("vnp_TxnRef");
+  const amount = parseInt(params.get("vnp_Amount") || "0") / 100;
 
-    setStatus(responseCode === "00" ? "success" : "fail");
-    setInfo({
-      orderCode,
-      amount,
-      transId: params.get("vnp_TransactionNo"),
-      bankCode: params.get("vnp_BankCode"),
-      payDate: params.get("vnp_PayDate"),
-    });
+  const isSuccess = responseCode === "00";
 
-    if (responseCode === "00" && orderCode && datSanId) {
-      axiosPrivate.post(`/customer/check-thanh-toan/${orderCode}`, {
-        dat_san_id: datSanId,
-        amount,
-        payment_method: "vnpay",
-        vnp_transaction_no: params.get("vnp_TransactionNo"),
-      })
-        .then(() => setMessage("Đặt sân đã được xác nhận."))
-        .catch(() => setMessage("Không lưu được thông tin thanh toán."));
-    } else {
-      setMessage("Thanh toán thất bại!");
-    }
-  }, [location]);
+  setStatus(isSuccess ? "success" : "fail");
+
+  setInfo({
+    orderCode,
+    amount,
+    transId: params.get("vnp_TransactionNo"),
+    bankCode: params.get("vnp_BankCode"),
+    payDate: params.get("vnp_PayDate"),
+  });
+
+  // ✅ message PHỤ THUỘC STATUS
+  if (isSuccess) {
+    setMessage("Thanh toán thành công. Cảm ơn bạn!");
+  } else {
+    setMessage("Thanh toán thất bại!");
+  }
+}, [location]);
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

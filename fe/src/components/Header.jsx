@@ -28,15 +28,15 @@ export default function Header() {
       setIsLoggedIn(false);
       setUserName("");
     }
-  }, [location.pathname]); // 🚀 Fix lỗi không cập nhật state
+  }, [location.pathname]); 
 
   const handleLogout = () => {
     localStorage.clear();
-    axiosPrivate.defaults.headers.common["Authorization"] = ""; // reset token axios
+    axiosPrivate.defaults.headers.common["Authorization"] = ""; 
     setIsLoggedIn(false);
     setUserName("");
 
-    // Reload chuẩn để reset toàn bộ state
+   
     window.location.href = "/login";
   };
 
@@ -50,7 +50,7 @@ export default function Header() {
             to="/"
             className="btn btn-ghost text-2xl font-bold text-success gap-2"
           >
-            ⚽ Đặt Sân Thể Thao
+            ⚽ ChocolateSport
           </Link>
         </div>
 

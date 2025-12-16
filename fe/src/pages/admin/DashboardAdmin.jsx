@@ -15,6 +15,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
+    // const role =  JSON.parse(localStorage.getItem('user'));
+    // console.log(role.role);
     if (tab) setActiveTab(tab);
   }, [location]);
 

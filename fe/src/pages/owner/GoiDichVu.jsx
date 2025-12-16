@@ -7,6 +7,8 @@ export default function GoiDichVu() {
   const [goiHienTai, setGoiHienTai] = useState(null);
   const [goiList, setGoiList] = useState([]);
   const [modalData, setModalData] = useState(null);
+  const coGoiConHan = goiHienTai?.trang_thai === "con_han";
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,6 +17,7 @@ export default function GoiDichVu() {
         const [resCurrent, resList] = await Promise.all([
           axiosPrivate.get("/owner/goi-hien-tai"),
           axiosPrivate.get("/goi-dich-vu"),
+
         ]);
         setGoiHienTai(resCurrent.data || null);
         setGoiList(resList.data || []);
@@ -102,7 +105,8 @@ export default function GoiDichVu() {
         )}
 
         {/* Danh sách gói */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {!coGoiConHan && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {goiList.length === 0 ? (
             <div className="col-span-full text-center py-10 text-gray-500">
               Chưa có gói dịch vụ nào
@@ -139,7 +143,7 @@ export default function GoiDichVu() {
             })
           )}
         </div>
-
+        )}
         {/* Modal */}
         {modalData && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">

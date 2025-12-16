@@ -1,7 +1,7 @@
-    import axios from 'axios';
-
+import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL;
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api', // backend Laravel
+  baseURL: API_URL, 
 });
 
 API.interceptors.request.use((config) => {
