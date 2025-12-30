@@ -1,6 +1,18 @@
 import { Link } from "react-router-dom";
 
 export default function SanCard({ san }) {
+  // 🔹 Lọc lịch hợp lệ (chưa quá nửa thời gian)
+  const lichHopLe =
+    san.lich_trong?.filter((lich) => {
+      const start = new Date(`${lich.ngay}T${lich.gio_bat_dau}`);
+      const end = new Date(`${lich.ngay}T${lich.gio_ket_thuc}`);
+      const now = new Date();
+
+      const halfTime = start.getTime() + (end - start) / 2;
+
+      return now.getTime() <= halfTime;
+    }) || [];
+
   return (
     <Link to={`/san/${san.id}`}>
       <div className="card bg-white shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 rounded-xl overflow-hidden h-full flex flex-col">
@@ -43,34 +55,19 @@ export default function SanCard({ san }) {
             <span className="text-sm text-gray-500">/giờ</span>
           </div>
 
-          {/* Lịch trống (LUÔN CÓ KHỐI – FIX ĐỘ CAO) */}
-          <div className="mt-4 text-sm text-gray-700 min-h-[72px]">
-            {san.lich_trong && san.lich_trong.length > 0 ? (
+          {/* 🔹 Lịch trống – HIỂN THỊ ĐỒNG BỘ */}
+          <div className="mt-4 text-sm min-h-[72px]">
+            {lichHopLe.length > 0 ? (
               <>
-                <p className="font-semibold">Lịch trống gần nhất:</p>
-                <ul className="list-disc list-inside">
-                  {san.lich_trong
-                    .filter((lich) => {
-                      const start = new Date(
-                        `${lich.ngay}T${lich.gio_bat_dau}`
-                      );
-                      const end = new Date(
-                        `${lich.ngay}T${lich.gio_ket_thuc}`
-                      );
-                      const now = new Date();
-
-                      const duration = end - start;
-                      const halfDuration = duration / 2;
-
-                      // Nếu đã quá nửa thời gian thì ẩn
-                      return now.getTime() <= start.getTime() + halfDuration;
-                    })
-                    .slice(0, 2)
-                    .map((lich) => (
-                      <li key={lich.id}>
-                        {lich.ngay} | {lich.gio_bat_dau} - {lich.gio_ket_thuc}
-                      </li>
-                    ))}
+                <p className="font-semibold text-gray-700">
+                  Lịch trống gần nhất:
+                </p>
+                <ul className="list-disc list-inside text-gray-700">
+                  {lichHopLe.slice(0, 2).map((lich) => (
+                    <li key={lich.id}>
+                      {lich.ngay} | {lich.gio_bat_dau} - {lich.gio_ket_thuc}
+                    </li>
+                  ))}
                 </ul>
               </>
             ) : (

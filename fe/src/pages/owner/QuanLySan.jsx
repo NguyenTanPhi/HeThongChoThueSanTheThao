@@ -252,6 +252,7 @@ export default function QuanLySan({ setActiveTab }) {
                   <option>Sân Cầu lông</option>
                   <option>Sân Pickleball</option>
                   <option>Sân Tenis</option>
+                  <option>Sân Bóng rổ</option>
                 </select>
                 <input
                   type="number"

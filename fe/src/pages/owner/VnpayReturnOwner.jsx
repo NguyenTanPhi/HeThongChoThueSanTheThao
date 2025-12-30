@@ -12,34 +12,48 @@ export default function VnpayReturnOwner() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const responseCode = params.get("vnp_ResponseCode");
-    const orderCode = params.get("vnp_TxnRef");
-    const goiId = params.get("goiId"); // 👈 truyền id gói khi tạo đơn
-    const amount = parseInt(params.get("vnp_Amount") || "0") / 100;
+  const params = new URLSearchParams(location.search);
+  const responseCode = params.get("vnp_ResponseCode");
+  const orderCode = params.get("vnp_TxnRef");
+  const goiId = params.get("goiId");
+  const amount = parseInt(params.get("vnp_Amount") || "0") / 100;
 
-    setStatus(responseCode === "00" ? "success" : "fail");
-    setInfo({
-      orderCode,
+  const isSuccess = responseCode === "00";
+
+  setStatus(isSuccess ? "success" : "fail");
+
+  setInfo({
+    orderCode,
+    amount,
+    transId: params.get("vnp_TransactionNo"),
+    bankCode: params.get("vnp_BankCode"),
+    payDate: params.get("vnp_PayDate"),
+  });
+
+  if (!isSuccess) {
+    setMessage("Thanh toán thất bại!");
+    return;
+  }
+
+  // ✔ Thanh toán thành công
+  setMessage("Đang xử lý kích hoạt gói dịch vụ...");
+
+  if (orderCode && goiId) {
+    axiosPrivate.post(`/owner/check-thanh-toan/${orderCode}`, {
+      goi_dich_vu_id: goiId,
       amount,
-      transId: params.get("vnp_TransactionNo"),
-      bankCode: params.get("vnp_BankCode"),
-      payDate: params.get("vnp_PayDate"),
-    });
-
-    if (responseCode === "00" && orderCode && goiId) {
-      axiosPrivate.post(`/owner/check-thanh-toan/${orderCode}`, {
-        goi_dich_vu_id: goiId,
-        amount,
-        payment_method: "vnpay",
-        vnp_transaction_no: params.get("vnp_TransactionNo"),
+      payment_method: "vnpay",
+      vnp_transaction_no: params.get("vnp_TransactionNo"),
+    })
+      .then(() => {
+        setMessage("Gói dịch vụ đã được kích hoạt.");
       })
-        .then(() => setMessage("Gói dịch vụ đã được kích hoạt."))
-        .catch(() => setMessage("Không lưu được thông tin thanh toán."));
-    } else {
-      setMessage("Thanh toán thất bại!");
-    }
-  }, [location]);
+      .catch(() => {
+        setMessage("Thanh toán thành công nhưng lưu giao dịch thất bại.");
+      });
+  }
+}, [location.search]);
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

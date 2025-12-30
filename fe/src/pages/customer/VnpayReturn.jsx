@@ -27,7 +27,7 @@ export default function VnpayReturn() {
     payDate: params.get("vnp_PayDate"),
   });
 
-  // ✅ message PHỤ THUỘC STATUS
+  
   if (isSuccess) {
     setMessage("Thanh toán thành công. Cảm ơn bạn!");
   } else {

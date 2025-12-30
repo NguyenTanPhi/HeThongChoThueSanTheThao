@@ -25,6 +25,10 @@ import Notification from "./pages/owner/Notification.jsx";
 import DashboardAdmin from "./pages/admin/DashboardAdmin.jsx";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import QuanLyUser from "./pages/admin/QuanLyUser.jsx";
+import QuanLyGoiDichVu from "./pages/admin/QuanLyGoiDichVu.jsx";
+import SanChoDuyet from "./pages/admin/SanChoDuyet.jsx";
+import BaoCao from "./pages/admin/BaoCao.jsx";
 
 // Layout cho khách hàng: có header + footer
 function CustomerLayout() {
@@ -74,6 +78,17 @@ function App() {
         <Route path="/owner/vnpay-return" element={<VnpayReturnOwner />} />
         <Route path="/owner/goi-dich-vu" element={<GoiDichVu />} />
         <Route path="/owner/notifications" element={<Notification />} />
+      </Route>
+            {/* Admin routes */}
+      <Route element={<OwnerLayout />}>  {/* Hoặc <AdminLayout /> nếu bạn tạo riêng */}
+        <Route path="/admin/dashboard" element={<DashboardAdmin />} />
+        
+        <Route path="/admin/quan-ly-user" element={<QuanLyUser />} />
+        <Route path="/admin/quan-ly-goi-dich-vu" element={<QuanLyGoiDichVu />} />
+        <Route path="/admin/san-cho-duyet" element={<SanChoDuyet />} />
+        <Route path="/admin/bao-cao" element={<BaoCao />} />
+        
+        {/* Nếu sau này có thêm trang khác thì bổ sung ở đây */}
       </Route>
 
      
