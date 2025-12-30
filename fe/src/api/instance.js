@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_URL = "http://localhost:8000/api"; // hoặc import.meta.env.VITE_API_URL
+const API_URL = '/api';
 
 const axiosPublic = axios.create({
   baseURL: API_URL,
