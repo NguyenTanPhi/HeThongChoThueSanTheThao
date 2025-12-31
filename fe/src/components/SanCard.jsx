@@ -20,7 +20,7 @@ export default function SanCard({ san }) {
         <figure className="h-48 bg-gray-200">
           {san.hinh_anh ? (
             <img
-              src={`http://localhost:8000/storage/${san.hinh_anh}`}
+              src={`${san.hinh_anh}`}
               alt={san.ten_san}
               className="w-full h-full object-cover"
             />

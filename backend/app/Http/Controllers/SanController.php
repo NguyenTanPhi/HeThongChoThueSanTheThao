@@ -7,34 +7,48 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-
-
+use App\Helpers\ImageHelper;
+use Illuminate\Http\UploadedFile;
 class SanController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = San::with('owner')
-        
+{
+    $cacheKey = 'san_index_' . md5(json_encode($request->all()));
+
+    $san = cache()->remember($cacheKey, 300, function () use ($request) {
+        $query = San::query()
+            ->select('id','ten_san','loai_san','gia_thue','dia_chi','hinh_anh','owner_id')
+            ->with(['owner:id,name'])
             ->where('trang_thai_duyet', 'da_duyet')
             ->where('trang_thai', 'hoat_dong');
 
         if ($request->loai_san) {
-            $query->where('loai_san', 'like', '%' . $request->loai_san . '%');
+            $query->where('loai_san', $request->loai_san);
         }
+
         if ($request->dia_chi) {
             $query->where('dia_chi', 'like', '%' . $request->dia_chi . '%');
         }
 
-        $san = $query->paginate(12);
+        return $query->paginate(12);
+    });
 
-        return response()->json($san);
-    }
+    return response()->json($san);
+}
 
     public function show($id)
-    {
-        $san = San::with(['owner', 'danhGia'])->findOrFail($id);
-        return response()->json($san);
-    }
+{
+    $san = cache()->remember("san_detail_$id", 300, function () use ($id) {
+        return San::select('id','ten_san','loai_san','gia_thue','dia_chi','mo_ta','hinh_anh','owner_id')
+            ->with([
+                'owner:id,name',
+                'danhGia:id,san_id,nguoi_dung_id,noi_dung'
+            ])
+            ->findOrFail($id);
+    });
+
+    return response()->json($san);
+}
 
    public function store(Request $request)
 {
@@ -56,7 +70,7 @@ if (!$goi) {
 }
 
 
-
+       
     $request->validate([
         'ten_san' => 'required|string|max:255',
         'loai_san' => 'required|string',
@@ -65,16 +79,25 @@ if (!$goi) {
         'mo_ta' => 'nullable|string',
         'hinh_anh' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
     ]);
-
-    $data = $request->all();
+    $data = $request->except('hinh_anh');
+    //$data = $request->all();
     $data['owner_id'] = $user->id;
     $data['trang_thai_duyet'] = 'cho_duyet';
     $data['trang_thai'] = 'hoat_dong';
+     if ($request->hasFile('hinh_anh')) {
+    try {
+        $imageUrl = ImageHelper::uploadImage(
+            $request->file('hinh_anh'),
+            'products'
+        );
 
-    if ($request->hasFile('hinh_anh')) {    
-        $data['hinh_anh'] = $request->file('hinh_anh')
-    ->storeAs('san', $request->file('hinh_anh')->getClientOriginalName(), 'public');
+        if ($imageUrl) {
+            $data['hinh_anh'] = $imageUrl;
+        }
+    } catch (\Exception $e) {
+        Log::error('Image upload failed', ['error' => $e->getMessage()]);
     }
+}
 
     San::create($data);
 
@@ -123,7 +146,16 @@ if (!$goi) {
 {
     $user = $request->user();
     $san = San::where('owner_id', $user->id)->where('id', $id)->first();
+    $hasBooked = $san->lichSan()
+                     ->where('trang_thai', 'da_dat')
+                     ->exists();
 
+    if ($hasBooked) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Không thể xóa sân vì đã có lịch được đặt'
+        ], 400);
+    }
     if (!$san) {
         return response()->json([
             'success' => false,

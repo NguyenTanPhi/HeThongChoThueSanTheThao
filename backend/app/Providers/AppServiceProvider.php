@@ -14,6 +14,7 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->bind(\Illuminate\Database\Eloquent\Model::class, function () {
+        $this->app->register(CloudinaryServiceProvider::class);
         return new \Illuminate\Database\Eloquent\Model;
     });
     }

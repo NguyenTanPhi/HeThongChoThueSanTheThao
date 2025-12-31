@@ -3,11 +3,13 @@ const API_URL = import.meta.env.VITE_APP_URL;
 
 const axiosPublic = axios.create({
   baseURL: API_URL,
+  timeout: 60000,
   headers: { "Content-Type": "application/json" },
 });
 
 const axiosPrivate = axios.create({
   baseURL: API_URL,
+  timeout: 60000,
   headers: { "Content-Type": "application/json" },
   //withCredentials: true,
 });

@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 export default function QuanLySan({ setActiveTab }) {
   const [sanList, setSanList] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [newSan, setNewSan] = useState({
     ten_san: "",
     loai_san: "",
@@ -69,13 +71,17 @@ export default function QuanLySan({ setActiveTab }) {
       }
     } catch (err) {
       console.error(err);
-      setToast({ type: "error", message: "Có lỗi xảy ra khi xóa sân!" });
+      const errmess = err.response.data.message;
+      setToast({ type: "error", message: errmess });
     } finally {
       setTimeout(() => setToast(null), 3000);
     }
   };
 
   const handleAddSan = async () => {
+    if (isSubmitting) return;
+
+  setIsSubmitting(true);
     const formData = new FormData();
     Object.keys(newSan).forEach((key) => formData.append(key, newSan[key]));
 
@@ -105,6 +111,7 @@ export default function QuanLySan({ setActiveTab }) {
       console.error(err);
       setToast({ type: "error", message: "Có lỗi khi đăng ký sân!" });
     } finally {
+       setIsSubmitting(false);
       setTimeout(() => setToast(null), 3000);
     }
   };
@@ -139,7 +146,7 @@ export default function QuanLySan({ setActiveTab }) {
                 <div className="relative">
                   {san.hinh_anh && (
                     <img
-                      src={`http://localhost:8000/storage/${san.hinh_anh}`}
+                      src={`${san.hinh_anh}`}
                       alt={san.ten_san}
                       className="w-full h-48 object-cover rounded-t-2xl"
                     />
@@ -284,8 +291,8 @@ export default function QuanLySan({ setActiveTab }) {
                 <button className="btn" onClick={() => setIsAddModalOpen(false)}>
                   Hủy
                 </button>
-                <button className="btn btn-success" onClick={handleAddSan}>
-                  Đăng ký
+                <button className="btn btn-success" onClick={handleAddSan} disabled={isSubmitting}>
+                 {isSubmitting ? "Đang đăng ký..." : "Đăng ký"}
                 </button>
               </div>
             </div>

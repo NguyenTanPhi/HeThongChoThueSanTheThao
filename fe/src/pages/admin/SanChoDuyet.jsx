@@ -72,7 +72,7 @@ export default function SanChoDuyet() {
                 <img
                   src={
                     san.hinh_anh
-                      ? `http://localhost:8000/storage/${san.hinh_anh}`
+                      ? `${san.hinh_anh}`
                       : "/no-image.png"
                   }
                   className="w-32 h-32 object-cover rounded-xl shadow-md"
