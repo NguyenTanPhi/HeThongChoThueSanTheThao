@@ -6,6 +6,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
@@ -109,6 +112,82 @@ public function confirmOwner(Request $request)
     $user->update($validated);
 
     return response()->json(['message' => 'Cập nhật thành công', 'user' => $user]);
+}
+
+public function forgotPassword(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email'
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    // Không tiết lộ email tồn tại hay không
+    if (!$user) {
+        return response()->json([
+            'message' => 'Nếu email tồn tại, link đặt lại mật khẩu đã được gửi'
+        ]);
+    }
+
+    $token = Str::random(64);
+
+    DB::table('password_resets')->updateOrInsert(
+        ['email' => $request->email],
+        [
+            'token' => Hash::make($token),
+            'created_at' => Carbon::now()
+        ]
+    );
+
+  $resetLink = env('URL_FRONTEND_RESET_PASSWORD') . "/reset-password?token=" . $token;
+
+   Mail::send([], [], function ($message) use ($request, $resetLink) {
+    $message->to($request->email)
+        ->subject('Đặt lại mật khẩu')
+        ->setBody(
+            'Bấm vào <a href="'.$resetLink.'">đây</a> để đặt lại mật khẩu. Link có hiệu lực 15 phút.',
+            'text/html'
+        );
+        }
+    );
+
+    return response()->json([
+        'message' => 'Nếu email tồn tại, link đặt lại mật khẩu đã được gửi'
+    ]);
+}
+
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'password' => 'required|min:6|confirmed'
+    ]);
+
+    $reset = DB::table('password_resets')->first();
+
+    if (!$reset || !Hash::check($request->token, $reset->token)) {
+        return response()->json(['message' => 'Token không hợp lệ'], 400);
+    }
+
+    // Hết hạn sau 15 phút
+    if (Carbon::parse($reset->created_at)->addMinutes(15)->isPast()) {
+        return response()->json(['message' => 'Token đã hết hạn'], 400);
+    }
+
+    $user = User::where('email', $reset->email)->first();
+
+    if (!$user) {
+        return response()->json(['message' => 'User không tồn tại'], 404);
+    }
+
+    $user->password = Hash::make($request->password);
+    $user->save();
+
+    DB::table('password_resets')->where('email', $reset->email)->delete();
+
+    return response()->json([
+        'message' => 'Đổi mật khẩu thành công'
+    ]);
 }
 
 }

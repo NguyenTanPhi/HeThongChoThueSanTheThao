@@ -14,4 +14,5 @@ class DanhGia extends Model
     {
         return $this->belongsTo(San::class, 'san_id');
     }
+    
 }

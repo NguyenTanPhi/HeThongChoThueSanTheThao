@@ -29,6 +29,8 @@ import QuanLyUser from "./pages/admin/QuanLyUser.jsx";
 import QuanLyGoiDichVu from "./pages/admin/QuanLyGoiDichVu.jsx";
 import SanChoDuyet from "./pages/admin/SanChoDuyet.jsx";
 import BaoCao from "./pages/admin/BaoCao.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword";
 
 // Layout cho khách hàng: có header + footer
 function CustomerLayout() {
@@ -43,7 +45,7 @@ function CustomerLayout() {
   );
 }
 
-// Layout cho Owner/Admin: không có header/footer
+// Layout cho Owner/Admin: không có header/footer 
 function OwnerLayout() {
   return (
     <div className="min-h-screen">
@@ -68,6 +70,8 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/open/confirmEmail" element={<ConfirmEmailSuccess />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
       {/* Owner routes */}

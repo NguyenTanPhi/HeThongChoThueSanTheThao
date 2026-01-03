@@ -6,12 +6,18 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
       const res = await axiosPublic.post("/login", { email, password });
+
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
@@ -22,18 +28,20 @@ export default function Login() {
       } else if (role === "admin") {
         navigate("/admin/dashboard");
       } else {
-        navigate("/"); // customer
+        navigate("/");
       }
     } catch (err) {
       setError("Sai email hoặc mật khẩu");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
       <div className="w-full max-w-md">
-        <form 
-          onSubmit={handleLogin} 
+        <form
+          onSubmit={handleLogin}
           className="bg-white p-10 rounded-2xl shadow-xl border border-gray-200"
         >
           <h2 className="text-3xl font-bold mb-6 text-center text-green-600">
@@ -41,13 +49,16 @@ export default function Login() {
           </h2>
 
           {error && (
-            <p className="text-red-500 mb-4 text-center font-medium">{error}</p>
+            <p className="text-red-500 mb-4 text-center font-medium">
+              {error}
+            </p>
           )}
 
           <div className="space-y-4">
             <input
               type="email"
               placeholder="Email"
+              disabled={loading}
               className="input input-bordered w-full rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -57,18 +68,38 @@ export default function Login() {
             <input
               type="password"
               placeholder="Mật khẩu"
+              disabled={loading}
               className="input input-bordered w-full rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
+          <div className="text-right mt-2">
+  <Link
+    to="/forgot-password"
+    className="text-sm text-green-600 hover:underline"
+  >
+    Quên mật khẩu?
+  </Link>
+</div>
+
 
           <button
             type="submit"
-            className="btn btn-success w-full mt-6 text-white text-lg rounded-lg shadow-md hover:bg-green-700 transition"
+            disabled={loading}
+            className={`btn btn-success w-full mt-6 text-white text-lg rounded-lg shadow-md transition
+              ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-green-700"}
+            `}
           >
-            Đăng nhập
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="loading loading-spinner loading-sm"></span>
+                Đang đăng nhập...
+              </span>
+            ) : (
+              "Đăng nhập"
+            )}
           </button>
 
           <p className="mt-6 text-center text-gray-500 text-sm">

@@ -12,27 +12,16 @@ export default function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getSanList()
-      .then(async (res) => {
-        const listSan = res.data.data || res.data || [];
+  getSanList()
+    .then((res) => {
+      // Laravel paginate → data nằm trong data
+      const listSan = res.data.data || [];
+      setSanList(listSan);
+      setLoading(false);
+    })
+    .catch(() => setLoading(false));
+}, []);
 
-        const sanWithLich = await Promise.all(
-          listSan.map(async (san) => {
-            try {
-              const lichRes = await axiosPublic.get(`/san/${san.id}/lich-trong`);
-              return { ...san, lich_trong: lichRes.data };
-            } catch (err) {
-              console.error("Lỗi lấy lịch trống:", err);
-              return { ...san, lich_trong: [] };
-            }
-          })
-        );
-
-        setSanList(sanWithLich);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
 
   const filteredSanList = sanList.filter((san) =>
     san.ten_san.toLowerCase().includes(searchTerm.toLowerCase())

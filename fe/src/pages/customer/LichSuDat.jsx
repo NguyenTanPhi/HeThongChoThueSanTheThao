@@ -114,14 +114,14 @@ export default function LichSuDat() {
                   </p>
                 </div>
 
-                {!daDanhGia && (
-                  <button
-                    className="btn btn-warning btn-sm mt-2 hover:bg-yellow-500 transition"
-                    onClick={() => setSelectedBooking(item)}
-                  >
-                    ⭐ Đánh giá
-                  </button>
-                )}
+                {item.da_hoan_thanh && !daDanhGia && (
+  <button
+    className="btn btn-warning btn-sm mt-2 hover:bg-yellow-500 transition"
+    onClick={() => setSelectedBooking(item)}
+  >
+    ⭐ Đánh giá
+  </button>
+)}
               </div>
             );
           })}

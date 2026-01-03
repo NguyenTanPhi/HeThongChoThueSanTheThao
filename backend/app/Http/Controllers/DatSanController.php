@@ -298,6 +298,7 @@ public function customerMyBookings(Request $request)
             ->orderBy('created_at', 'desc')
             ->get();
 
+            
         return response()->json([
             'success' => true,
             'data'    => $bookings

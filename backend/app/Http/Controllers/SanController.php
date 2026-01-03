@@ -13,12 +13,25 @@ class SanController extends Controller
 {
     public function index(Request $request)
 {
-    $cacheKey = 'san_index_' . md5(json_encode($request->all()));
+    $cacheKey = 'san_index_khach_' . md5(json_encode($request->all()));
 
     $san = cache()->remember($cacheKey, 300, function () use ($request) {
-        $query = San::query()
-            ->select('id','ten_san','loai_san','gia_thue','dia_chi','hinh_anh','owner_id')
-            ->with(['owner:id,name'])
+        $query = San::select(
+                'id',
+                'ten_san',
+                'loai_san',
+                'gia_thue',
+                'dia_chi',
+                'hinh_anh',
+                'owner_id'
+            )
+            ->with([
+                'owner:id,name',
+            ])
+            // 🔥 CHỈ CHECK TỒN TẠI, KHÔNG LOAD DATA
+            ->withExists([
+                'lichTrong as con_lich_trong'
+            ])
             ->where('trang_thai_duyet', 'da_duyet')
             ->where('trang_thai', 'hoat_dong');
 
@@ -36,10 +49,11 @@ class SanController extends Controller
     return response()->json($san);
 }
 
+
     public function show($id)
 {
     $san = cache()->remember("san_detail_$id", 300, function () use ($id) {
-        return San::select('id','ten_san','loai_san','gia_thue','dia_chi','mo_ta','hinh_anh','owner_id')
+        return San::select('id','ten_san','loai_san','gia_thue','dia_chi','mo_ta','hinh_anh','owner_id',  'trang_thai_duyet')
             ->with([
                 'owner:id,name',
                 'danhGia:id,san_id,nguoi_dung_id,noi_dung'
@@ -127,21 +141,6 @@ if (!$goi) {
         return response()->json(['error' => 'Server error'], 500);
     }
 }
-
-    public function update(Request $request, $id)
-    {
-        $san = San::where('owner_id', $request->user()->id)
-            ->where('id', $id)
-            ->firstOrFail();
-
-        $san->update($request->all());
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Cập nhật thành công!',
-            'san' => $san
-        ]);
-    }
     public function destroy(Request $request, $id)
 {
     $user = $request->user();
@@ -240,7 +239,9 @@ if (!$goi) {
         'gio_ket_thuc' => 'required|date_format:H:i|after:gio_bat_dau',
         'gia' => 'nullable|numeric|min:0'
     ]);
-    $san = \App\Models\San::findOrFail($id);
+    $san = San::where('id', $id)
+    ->where('owner_id', $user->id)
+    ->firstOrFail();
     $gia = $request->gia ?: $san->gia_thue;
 
     // Kiểm tra trùng
@@ -249,8 +250,8 @@ if (!$goi) {
         ->where('ngay', $request->ngay)
         ->where('trang_thai', 'trong')
         ->where(function ($q) use ($request) {
-            $q->where('gio_bat_dau', '<=', $request->gio_ket_thuc)
-              ->where('gio_ket_thuc', '>=', $request->gio_bat_dau);
+           $q->where('gio_bat_dau', '<', $request->gio_ket_thuc)
+  ->where('gio_ket_thuc', '>', $request->gio_bat_dau);
         })
         ->exists();
 
@@ -269,72 +270,6 @@ if (!$goi) {
     ]);
 
     return response()->json(['success' => true, 'message' => 'Thêm lịch trống thành công!']);
-}
-public function suaLichTrong(Request $request, $id, $lichId)
-{
-    $user = $request->user();
-
-    // Kiểm tra gói
-    $goi = DB::table('goidamua')
-    ->where('nguoi_dung_id', $user->id)
-    ->whereDate('ngay_het', '>=', now())
-    ->orderByDesc('ngay_het')
-    ->first();
-
-if (!$goi) {
-    return response()->json([
-        'success' => false,
-        'require_package' => true,
-        'message' => 'Bạn cần có gói dịch vụ để thực hiện chức năng này!'
-    ], 403);
-}
-
-
-    if ($request->has('_method') && $request->input('_method') === 'PUT') {
-        $request->merge(['_method' => 'PUT']);
-    }
-
-    $request->validate([
-        'ngay' => 'required|date|after_or_equal:today',
-        'gio_bat_dau' => 'required|date_format:H:i',
-        'gio_ket_thuc' => 'required|date_format:H:i|after:gio_bat_dau',
-        'gia' => 'nullable|numeric|min:0'
-    ]);
-
-    $san = San::where('id', $id)->where('owner_id', $user->id)->firstOrFail();
-    $gia = $request->gia !== null ? $request->gia : $san->gia_thue;
-
-    // Kiểm tra trùng (trừ chính nó)
-    $trung = DB::table('lich_san')
-        ->where('san_id', $id)
-        ->where('ngay', $request->ngay)
-        ->where('trang_thai', 'trong')
-        ->where('id', '!=', $lichId)
-        ->where(function ($q) use ($request) {
-            $q->where('gio_bat_dau', '<=', $request->gio_ket_thuc)
-              ->where('gio_ket_thuc', '>=', $request->gio_bat_dau);
-        })
-        ->exists();
-
-    if ($trung) {
-        return response()->json(['success' => false, 'message' => 'Khung giờ đã tồn tại!'], 400);
-    }
-
-    $updated = DB::table('lich_san')
-        ->where('id', $lichId)
-        ->where('san_id', $id)
-        ->where('trang_thai', 'trong')
-        ->update([
-            'ngay' => $request->ngay,
-            'gio_bat_dau' => $request->gio_bat_dau,
-            'gio_ket_thuc' => $request->gio_ket_thuc,
-            'gia' => $gia,
-        ]);
-
-    return response()->json([
-        'success' => $updated > 0,
-        'message' => $updated > 0 ? 'Cập nhật thành công!' : 'Không tìm thấy lịch để sửa!'
-    ]);
 }
 
 

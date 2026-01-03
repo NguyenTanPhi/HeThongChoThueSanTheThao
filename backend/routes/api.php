@@ -20,6 +20,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/owner/confirm', [AuthController::class, 'confirmOwner']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
 
 // Route VNPay return
 Route::get('/vnpay_return', [OwnerController::class, 'vnpayReturn']);

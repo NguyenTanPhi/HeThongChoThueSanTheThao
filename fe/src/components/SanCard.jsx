@@ -55,25 +55,19 @@ export default function SanCard({ san }) {
             <span className="text-sm text-gray-500">/giờ</span>
           </div>
 
-          {/* 🔹 Lịch trống – HIỂN THỊ ĐỒNG BỘ */}
-          <div className="mt-4 text-sm min-h-[72px]">
-            {lichHopLe.length > 0 ? (
-              <>
-                <p className="font-semibold text-gray-700">
-                  Lịch trống gần nhất:
-                </p>
-                <ul className="list-disc list-inside text-gray-700">
-                  {lichHopLe.slice(0, 2).map((lich) => (
-                    <li key={lich.id}>
-                      {lich.ngay} | {lich.gio_bat_dau} - {lich.gio_ket_thuc}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <p className="italic text-gray-400">Chưa có lịch trống</p>
-            )}
-          </div>
+          {/* Trạng thái lịch trống */}
+<div className="mt-4 text-sm min-h-[24px]">
+  {san.con_lich_trong ? (
+    <p className="text-emerald-600 font-semibold">
+      ✅ Còn lịch trống
+    </p>
+  ) : (
+    <p className="text-gray-400 italic">
+      ❌ Chưa có lịch trống
+    </p>
+  )}
+</div>
+
 
           {/* Nút */}
           <div className="card-actions mt-auto pt-4">

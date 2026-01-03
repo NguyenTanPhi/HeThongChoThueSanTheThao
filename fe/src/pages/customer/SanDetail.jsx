@@ -60,7 +60,7 @@ export default function SanDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <img 
-              src={`http://localhost:8000/storage/${san.hinh_anh}`} 
+              src={`${san.hinh_anh}`} 
               alt={san.ten_san}
               className="w-full h-96 object-cover rounded-2xl shadow-xl"
             />

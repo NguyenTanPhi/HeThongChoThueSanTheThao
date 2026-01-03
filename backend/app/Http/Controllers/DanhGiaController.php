@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DanhGia;
+use App\Models\DatSan;
 use App\Models\San;
 use App\Models\Notification; 
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class DanhGiaController extends Controller
     //Kiểm tra đánh giá hay chưa
     public function checkDaDanhGia(Request $request)
     {
-        $nguoi_dung_id = $request->query('nguoi_dung_id') ?? auth()->id();
+        $nguoi_dung_id = auth()->id();
         $san_id = $request->query('san_id');
 
         if (!$nguoi_dung_id || !$san_id) {
@@ -44,6 +45,19 @@ class DanhGiaController extends Controller
 
         $san_id = $request->san_id;
         $nguoi_dung_id = $user->id;
+
+        $daHoanThanh = DatSan::where('user_id', $nguoi_dung_id)
+    ->where('san_id', $san_id)
+    ->where('da_hoan_thanh', true)
+    ->exists();
+
+if (!$daHoanThanh) {
+    return response()->json([
+        'success' => false,
+        'message' => 'Chỉ được đánh giá sau khi hoàn thành trận đấu'
+    ], 403);
+}
+
 
         // Kiểm tra đã đánh giá chưa
         $daTonTai = DanhGia::where('nguoi_dung_id', $nguoi_dung_id)

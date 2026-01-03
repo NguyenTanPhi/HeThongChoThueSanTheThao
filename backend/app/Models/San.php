@@ -24,6 +24,17 @@ class San extends Model
         return $this->hasMany(LichSan::class, 'san_id');
     }
 
+    public function lichTrong()
+{
+    return $this->hasMany(LichSan::class, 'san_id')
+        ->where('trang_thai', 'trong')
+          ->where('ngay', '>=', now()->toDateString())
+        ->orderBy('ngay')
+        ->orderBy('gio_bat_dau')
+        ->limit(5); 
+}
+
+
     public function datSan()
     {
         return $this->hasMany(DatSan::class, 'san_id');

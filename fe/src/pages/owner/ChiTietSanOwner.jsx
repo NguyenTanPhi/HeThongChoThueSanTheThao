@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { axiosPrivate, axiosPublic } from "../../api/instance";
+import LichTrongCalendar from '../../components/LichTrongCalendar'; // điều chỉnh path nếu cần
 
 export default function ChiTietSanOwner({ setActiveTab }) {
   const { id } = useParams();
@@ -19,16 +20,6 @@ export default function ChiTietSanOwner({ setActiveTab }) {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
   };
-
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newLich, setNewLich] = useState({
-    ngay: "",
-    gio_bat_dau: "",
-    gio_ket_thuc: "",
-    gia: ""
-  });
-
-  const [deleteModal, setDeleteModal] = useState({ open: false, lichId: null });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,7 +41,7 @@ export default function ChiTietSanOwner({ setActiveTab }) {
       } catch (err) {
         console.error("Lỗi tải dữ liệu:", err);
 
-        if (err.response && err.response.status === 403 && err.response.data.require_package) {
+        if (err.response?.status === 403 && err.response.data?.require_package) {
           setToast({
             type: "error",
             message: err.response.data.message || "Gói dịch vụ chưa có hoặc đã hết hạn",
@@ -67,85 +58,27 @@ export default function ChiTietSanOwner({ setActiveTab }) {
     fetchData();
   }, [id, setActiveTab]);
 
-  const handleAddLich = async () => {
-    if (san.trang_thai_duyet !== "da_duyet") {
-      showToast("error", "Sân chưa được duyệt hoặc bị từ chối, không thể thêm lịch!");
-      return;
-    }
-
-    const now = new Date();
-    const lichStart = new Date(`${newLich.ngay}T${newLich.gio_bat_dau}`);
-    const lichEnd = new Date(`${newLich.ngay}T${newLich.gio_ket_thuc}`);
-
-    if (lichStart <= now) {
-      showToast("error", "Không thể thêm lịch đã qua");
-      return;
-    }
-
-    if (!newLich.ngay || !newLich.gio_bat_dau || !newLich.gio_ket_thuc || !newLich.gia) {
-      showToast("error", "Vui lòng điền đầy đủ thông tin");
-      return;
-    }
-
-    if (lichStart >= lichEnd) {
-      showToast("error", "Giờ bắt đầu phải nhỏ hơn giờ kết thúc");
-      return;
-    }
-
-    const isOverlap = lichTrong.some(lt => {
-      if (lt.ngay !== newLich.ngay) return false;
-      const existingStart = new Date(`${lt.ngay}T${lt.gio_bat_dau}`);
-      const existingEnd = new Date(`${lt.ngay}T${lt.gio_ket_thuc}`);
-      return lichStart < existingEnd && lichEnd > existingStart;
-    });
-
-    if (isOverlap) {
-      showToast("error", "Lịch mới bị trùng giờ với lịch đã có");
-      return;
-    }
-
-    const payload = { ...newLich, gia: Number(newLich.gia) };
-
+  const confirmDeleteLich = async (lichId) => {
     try {
-      const res = await axiosPrivate.post(`/owner/san/${id}/lich-trong`, payload);
-      if (res.data.success) {
-        setLichTrong(prev => [...prev, { id: res.data.id, ...payload }]);
-        setIsAddModalOpen(false);
-        setNewLich({ ngay: "", gio_bat_dau: "", gio_ket_thuc: "", gia: "" });
-        showToast("success", "Thêm lịch trống thành công!");
-      }
-    } catch (err) {
-      if (err.response && err.response.status === 403 && err.response.data.require_package) {
-        setToast({
-          type: "error",
-          message: err.response.data.message || "Gói dịch vụ chưa có hoặc đã hết hạn",
-          action: () => setActiveTab("goi-dich-vu")
-        });
-      } else {
-        showToast("error", "Thêm lịch thất bại. Kiểm tra dữ liệu nhập.");
-      }
-    }
-  };
-
-  const confirmDeleteLich = async () => {
-    try {
-      await axiosPrivate.delete(`/owner/san/${id}/lich-trong/${deleteModal.lichId}`);
-      setLichTrong(prev => prev.filter(lt => lt.id !== deleteModal.lichId));
-      setDeleteModal({ open: false, lichId: null });
-      showToast("success", "Xóa lịch trống thành công!");
+      await axiosPrivate.delete(`/owner/san/${id}/lich-trong/${lichId}`);
+      setLichTrong(prev => prev.filter(lt => lt.id !== lichId));
+      showToast("success", "Đã xóa lịch trống!");
     } catch (err) {
       showToast("error", "Xóa lịch thất bại!");
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex justify-center py-20">
         <span className="loading loading-spinner loading-lg"></span>
       </div>
     );
+  }
 
-  if (!san) return <div className="text-center py-20 text-2xl">Không tìm thấy sân</div>;
+  if (!san) {
+    return <div className="text-center py-20 text-2xl">Không tìm thấy sân</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -173,49 +106,68 @@ export default function ChiTietSanOwner({ setActiveTab }) {
               {Number(san.gia_thue).toLocaleString("vi-VN")}đ / giờ
             </div>
 
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">Lịch trống</h2>
-              <button
-                className="btn btn-primary"
-                onClick={() => {
+            <div className="mt-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold">Lịch trống</h2>
+              </div>
+
+              <LichTrongCalendar
+                lichTrong={lichTrong}
+                onAddSlot={async (newSlot) => {
                   if (san.trang_thai_duyet !== "da_duyet") {
                     showToast("error", "Sân chưa được duyệt hoặc bị từ chối, không thể thêm lịch!");
                     return;
                   }
-                  setIsAddModalOpen(true);
+
+                  // Check thời gian tương lai
+                  const now = new Date();
+                  const lichStart = new Date(`${newSlot.ngay}T${newSlot.gio_bat_dau}`);
+                  if (lichStart <= now) {
+                    showToast("error", "Không thể thêm lịch đã qua");
+                    return;
+                  }
+
+                  // Check overlap
+                  const isOverlap = lichTrong.some(lt => {
+                    if (lt.ngay !== newSlot.ngay) return false;
+                    const existingStart = new Date(`${lt.ngay}T${lt.gio_bat_dau}`);
+                    const existingEnd = new Date(`${lt.ngay}T${lt.gio_ket_thuc}`);
+                    const newStart = new Date(`${newSlot.ngay}T${newSlot.gio_bat_dau}`);
+                    const newEnd = new Date(`${newSlot.ngay}T${newSlot.gio_ket_thuc}`);
+                    return newStart < existingEnd && newEnd > existingStart;
+                  });
+
+                  if (isOverlap) {
+                    showToast("error", "Lịch mới bị trùng giờ với lịch đã có");
+                    return;
+                  }
+
+                  const payload = { ...newSlot };
+
+                  try {
+                    const res = await axiosPrivate.post(`/owner/san/${id}/lich-trong`, payload);
+                    if (res.data.success) {
+                      setLichTrong(prev => [...prev, { id: res.data.id, ...payload }]);
+                      showToast("success", "Thêm lịch trống thành công!");
+                    }
+                  } catch (err) {
+                    if (err.response?.status === 403 && err.response.data?.require_package) {
+                      setToast({
+                        type: "error",
+                        message: err.response.data.message || "Gói dịch vụ chưa có hoặc đã hết hạn",
+                        action: () => setActiveTab("goi-dich-vu"),
+                      });
+                    } else {
+                      showToast("error", "Thêm lịch thất bại. Kiểm tra dữ liệu!");
+                    }
+                  }
                 }}
-              >
-                ➕ Thêm lịch trống
-              </button>
+                onDeleteSlot={confirmDeleteLich}
+              />
             </div>
 
-            {lichTrong.length > 0 ? (
-              <ul className="space-y-4">
-                {lichTrong.map(lich => (
-                  <li key={`${lich.id}-${lich.ngay}-${lich.gio_bat_dau}`} className="border p-3 rounded-lg flex justify-between items-center">
-                    <div>
-                      <p className="font-medium">
-                        Ngày: {lich.ngay} | {lich.gio_bat_dau} - {lich.gio_ket_thuc}
-                      </p>
-                      <p className="text-gray-600">
-                        Giá: {Number(lich.gia).toLocaleString("vi-VN")}đ
-                      </p>
-                    </div>
-                    <button
-                      className="btn btn-error btn-sm"
-                      onClick={() => setDeleteModal({ open: true, lichId: lich.id })}
-                    >
-                      Xóa
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-600">Chưa có lịch trống</p>
-            )}
-
-            <div className="mt-8">
-              <h2 className="text-2xl font-semibold mb-2">
+            <div className="mt-12">
+              <h2 className="text-2xl font-semibold mb-4">
                 Đánh giá sân ({tongSo} đánh giá, trung bình {trungBinh}⭐)
               </h2>
 
@@ -238,71 +190,6 @@ export default function ChiTietSanOwner({ setActiveTab }) {
           </div>
         </div>
       </div>
-
-      {/* Modal thêm lịch */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Thêm lịch trống</h2>
-
-            <input
-              type="date"
-              className="input input-bordered w-full mb-3"
-              value={newLich.ngay}
-              onChange={e => setNewLich({ ...newLich, ngay: e.target.value })}
-            />
-
-            <input
-              type="time"
-              className="input input-bordered w-full mb-3"
-              value={newLich.gio_bat_dau}
-              onChange={e => setNewLich({ ...newLich, gio_bat_dau: e.target.value })}
-            />
-
-            <input
-              type="time"
-              className="input input-bordered w-full mb-3"
-              value={newLich.gio_ket_thuc}
-              onChange={e => setNewLich({ ...newLich, gio_ket_thuc: e.target.value })}
-            />
-
-            <input
-              type="number"
-              className="input input-bordered w-full mb-3"
-              placeholder="Giá"
-              value={newLich.gia}
-              onChange={e => setNewLich({ ...newLich, gia: e.target.value })}
-            />
-
-            <div className="flex justify-end gap-3">
-              <button className="btn" onClick={() => setIsAddModalOpen(false)}>
-                Hủy
-              </button>
-              <button className="btn btn-primary" onClick={handleAddLich}>
-                Lưu
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal xóa lịch */}
-      {deleteModal.open && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm text-center">
-            <h2 className="text-xl font-bold mb-4">Xác nhận xóa lịch</h2>
-            <p className="mb-4">Bạn có chắc muốn xóa lịch này?</p>
-            <div className="flex justify-center gap-4">
-              <button className="btn btn-secondary" onClick={() => setDeleteModal({ open: false, lichId: null })}>
-                Hủy
-              </button>
-              <button className="btn btn-error" onClick={confirmDeleteLich}>
-                Xóa
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Toast */}
       {toast && (
