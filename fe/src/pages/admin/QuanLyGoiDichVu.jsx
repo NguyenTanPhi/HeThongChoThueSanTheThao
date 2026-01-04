@@ -23,7 +23,7 @@ export default function GoiDichVu() {
   const fetchPackages = async () => {
     try {
       const res = await axiosPrivate.get("/admin/goi-dich-vu");
-      setPackages(res.data);
+     setPackages(res.data.data || []);
     } catch (err) {
       showToast("Không thể tải danh sách gói!", "error");
     }
@@ -37,7 +37,7 @@ export default function GoiDichVu() {
         thoi_han: Number(form.thoi_han),
       });
 
-      showToast("✅ Thêm gói thành công!", "success");
+      showToast("Thêm gói thành công!", "success");
       setIsAddOpen(false);
       resetForm();
       fetchPackages();

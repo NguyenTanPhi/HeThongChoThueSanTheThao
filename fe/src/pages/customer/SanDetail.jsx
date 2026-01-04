@@ -22,27 +22,40 @@ export default function SanDetail() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axiosPublic.get(`/san/${id}`)
-      .then(res => {
-        setSan(res.data.data || res.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    setLoading(true);
 
-    axiosPublic.get(`/danh-gia/san/${id}`)
-      .then(res => setDanhGia(res.data))
-      .catch(err => console.error(err));
+    Promise.all([
+      axiosPublic.get(`/san/${id}`),
+      axiosPublic.get(`/danh-gia/san/${id}`),
+      axiosPublic.get(`/san/${id}/lich-trong`)
+    ])
+    .then(([resSan, resDanhGia, resLichTrong]) => {
+      setSan(resSan.data.data || resSan.data);
+      setDanhGia(resDanhGia.data);
 
-    axiosPublic.get(`/san/${id}/lich-trong`)
-      .then(res => setLichTrong(res.data))
-      .catch(err => console.error(err));
+      // Lọc lịch trống ngay tại đây
+      const filteredLich = resLichTrong.data.filter(lich => {
+        const start = new Date(`${lich.ngay}T${lich.gio_bat_dau}`);
+        const end = new Date(`${lich.ngay}T${lich.gio_ket_thuc}`);
+        const now = new Date();
+        const halfDuration = (end - start) / 2;
+        return now.getTime() <= start.getTime() + halfDuration;
+      });
+      setLichTrong(filteredLich);
+    })
+    .catch(err => console.error(err))
+    .finally(() => setLoading(false));
   }, [id]);
 
   if (loading) return (
-    <div className="flex justify-center py-20">
+    <div className="flex flex-col items-center justify-center py-20 space-y-4">
+      <div className="h-96 w-full bg-gray-200 rounded-2xl animate-pulse"></div>
+      <div className="h-6 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+      <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
       <span className="loading loading-spinner loading-lg"></span>
     </div>
   );
+
   if (!san) return (
     <div className="text-center py-20 text-2xl">Không tìm thấy sân</div>
   );
@@ -62,6 +75,7 @@ export default function SanDetail() {
             <img 
               src={`${san.hinh_anh}`} 
               alt={san.ten_san}
+              loading="lazy"
               className="w-full h-96 object-cover rounded-2xl shadow-xl"
             />
           </div>
@@ -75,48 +89,35 @@ export default function SanDetail() {
             {/* Lịch trống */}
             <h2 className="text-2xl font-semibold mb-4">Lịch trống</h2>
             {lichTrong.length > 0 ? (
-  <ul className="space-y-4">
-    {lichTrong
-      .filter((lich) => {
-        const start = new Date(`${lich.ngay}T${lich.gio_bat_dau}`);
-        const end = new Date(`${lich.ngay}T${lich.gio_ket_thuc}`);
-        const now = new Date();
-
-        const duration = end - start;
-        const halfDuration = duration / 2;
-
-        // chỉ giữ lịch nếu hiện tại chưa vượt quá nửa thời gian
-        return now.getTime() <= start.getTime() + halfDuration;
-      })
-      .map((lich) => (
-        <li
-          key={lich.id}
-          className="border p-3 rounded-lg flex justify-between items-center"
-        >
-          <div>
-            <p className="font-medium">
-              Ngày: {lich.ngay} | {lich.gio_bat_dau} - {lich.gio_ket_thuc}
-            </p>
-            <p className="text-gray-600">
-              Giá: {Number(lich.gia).toLocaleString("vi-VN")}đ
-            </p>
-          </div>
-          <button
-            className="btn btn-success btn-sm"
-            onClick={() => {
-              setSelectedLich(lich);
-              setIsConfirmOpen(true);
-            }}
-          >
-            Đặt ngay
-          </button>
-        </li>
-      ))}
-  </ul>
-) : (
-  <p className="text-gray-600">Hiện chưa có lịch trống</p>
-)}
-
+              <ul className="space-y-4">
+                {lichTrong.map((lich) => (
+                  <li
+                    key={lich.id}
+                    className="border p-3 rounded-lg flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        Ngày: {lich.ngay} | {lich.gio_bat_dau} - {lich.gio_ket_thuc}
+                      </p>
+                      <p className="text-gray-600">
+                        Giá: {Number(lich.gia).toLocaleString("vi-VN")}đ
+                      </p>
+                    </div>
+                    <button
+                      className="btn btn-success btn-sm"
+                      onClick={() => {
+                        setSelectedLich(lich);
+                        setIsConfirmOpen(true);
+                      }}
+                    >
+                      Đặt ngay
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-600">Hiện chưa có lịch trống</p>
+            )}
 
             {/* Đánh giá */}
             {danhGia && (
@@ -135,6 +136,7 @@ export default function SanDetail() {
                           <img
                             src={`http://localhost:8000/storage/${dg.avatar}`}
                             alt={dg.ten_nguoi_dung}
+                            loading="lazy"
                             className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
@@ -174,19 +176,16 @@ export default function SanDetail() {
             <div className="flex justify-end gap-3">
               <button className="btn" onClick={() => setIsConfirmOpen(false)}>Hủy</button>
               <button 
-  className="btn btn-success"
-  onClick={() => {
-    setIsConfirmOpen(false);
-    navigate(
-  `/thanh-toan?lich_id=${selectedLich.id}&ngay=${selectedLich.ngay}&gio_bat_dau=${selectedLich.gio_bat_dau}&gio_ket_thuc=${selectedLich.gio_ket_thuc}&gia=${selectedLich.gia}`
-);
-
-  }}
->
-  Thanh toán
-</button>
-
-
+                className="btn btn-success"
+                onClick={() => {
+                  setIsConfirmOpen(false);
+                  navigate(
+                    `/thanh-toan?lich_id=${selectedLich.id}&ngay=${selectedLich.ngay}&gio_bat_dau=${selectedLich.gio_bat_dau}&gio_ket_thuc=${selectedLich.gio_ket_thuc}&gia=${selectedLich.gia}`
+                  );
+                }}
+              >
+                Thanh toán
+              </button>
             </div>
           </div>
         </div>

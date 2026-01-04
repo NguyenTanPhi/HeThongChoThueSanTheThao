@@ -16,25 +16,28 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await axiosPublic.post("/login", { email, password });
+  setLoading(true);
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+  const res = await axiosPublic.post("/login", { email, password });
 
-      const role = res.data.user.role;
+  localStorage.setItem("token", res.data.token);
+  localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      if (role === "owner") {
-        navigate("/owner/dashboard");
-      } else if (role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/");
-      }
-    } catch (err) {
-      setError("Sai email hoặc mật khẩu");
-    } finally {
-      setLoading(false);
-    }
+  // 👇 đảm bảo loading render xong
+  await new Promise((resolve) => setTimeout(resolve, 400));
+
+  const role = res.data.user.role;
+
+  if (role === "owner") navigate("/owner/dashboard");
+  else if (role === "admin") navigate("/admin/dashboard");
+  else navigate("/");
+
+} catch (err) {
+  setError("Sai email hoặc mật khẩu");
+} finally {
+  setLoading(false);
+}
+
   };
 
   return (

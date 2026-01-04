@@ -262,33 +262,37 @@ class DatSanController extends Controller
 {
     $ownerId = auth()->id();
 
-    $ngay  = $request->ngay;
-    $thang = $request->thang;
-    $nam   = $request->nam;
-    $from  = $request->from;
-    $to    = $request->to;
-
     $query = DatSan::where('trang_thai', 'da_thanh_toan')
         ->whereHas('san', function($q) use ($ownerId) {
             $q->where('owner_id', $ownerId);
         });
 
-    if ($ngay)  $query->whereDate('created_at', $ngay);
-if ($thang) $query->whereMonth('created_at', $thang);
-if ($nam)   $query->whereYear('created_at', $nam);
-if ($from && $to) $query->whereBetween('created_at', [$from, $to]);
+    // ✅ SỬA Ở ĐÂY
+    if ($request->ngay) {
+        $query->whereDate('ngay_dat', $request->ngay);
+    }
 
+    if ($request->thang) {
+        $query->whereMonth('ngay_dat', $request->thang);
+    }
 
-    $tongDoanhThu = $query->sum('tong_gia');
-    $tongDon = $query->count();
+    if ($request->nam) {
+        $query->whereYear('ngay_dat', $request->nam);
+    }
+
+    if ($request->from && $request->to) {
+        $query->whereBetween('ngay_dat', [$request->from, $request->to]);
+    }
+
     $lich = $query->with('san:id,ten_san')->get();
 
     return response()->json([
-        'doanh_thu' => $tongDoanhThu,
-        'so_don'    => $tongDon,
+        'doanh_thu' => $lich->sum('tong_gia'),
+        'so_don'    => $lich->count(),
         'lich'      => $lich
     ]);
 }
+
 public function customerMyBookings(Request $request)
     {
         $userId = $request->user()->id;

@@ -38,31 +38,32 @@ class AdminReportController extends Controller
     }
 
     public function baoCaoGoiDichVu(Request $request)
-    {
-        $query = DB::table('goidamua')
-            ->join('goidichvu', 'goidamua.goi_id', '=', 'goidichvu.id')
-            ->join('nguoi_dung', 'goidamua.nguoi_dung_id', '=', 'nguoi_dung.id')
-            ->select(
-                'goidamua.id',
-                'goidichvu.ten_goi',
-                'nguoi_dung.name as nguoi_dung',
-                'goidamua.ngay_mua',
-                'goidamua.ngay_het',
-                'goidichvu.gia'
-            );
+{
+    $query = DB::table('goidamua')
+        ->join('nguoi_dung', 'goidamua.nguoi_dung_id', '=', 'nguoi_dung.id')
+        ->leftJoin('goidichvu', 'goidamua.goi_id', '=', 'goidichvu.id')
+        ->select(
+            'goidamua.id',
+            DB::raw("COALESCE(goidichvu.ten_goi, CONCAT('Gói đã xóa #', goidamua.goi_id)) as ten_goi"),
+            'nguoi_dung.name as nguoi_dung',
+            'goidamua.ngay_mua',
+            'goidamua.ngay_het',
+            'goidamua.gia' // ⭐ QUAN TRỌNG
+        );
 
-        //Bộ lọc theo ngày mua gói
-        if ($request->filled('from')) {
-            $query->whereDate('goidamua.ngay_mua', '>=', $request->from);
-        }
-        if ($request->filled('to')) {
-            $query->whereDate('goidamua.ngay_mua', '<=', $request->to);
-        }
-
-        $data = $query->orderBy('goidamua.id', 'DESC')->get();
-
-        return response()->json($data);
+    // Bộ lọc theo ngày mua gói
+    if ($request->filled('from')) {
+        $query->whereDate('goidamua.ngay_mua', '>=', $request->from);
     }
+    if ($request->filled('to')) {
+        $query->whereDate('goidamua.ngay_mua', '<=', $request->to);
+    }
+
+    return response()->json(
+        $query->orderBy('goidamua.id', 'DESC')->get()
+    );
+}
+
 
     //Thống kê
     public function thongKe(Request $request)

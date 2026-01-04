@@ -11,23 +11,33 @@ export default function GoiDichVu() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [resCurrent, resList] = await Promise.all([
-          axiosPrivate.get("/owner/goi-hien-tai"),
-          axiosPrivate.get("/goi-dich-vu"),
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [resCurrent, resList] = await Promise.all([
+        axiosPrivate.get("/owner/goi-hien-tai"),
+        axiosPrivate.get("/goi-dich-vu"),
+      ]);
 
-        ]);
-        setGoiHienTai(resCurrent.data || null);
-        setGoiList(resList.data || []);
-      } catch (err) {
-        console.error("Lỗi tải gói dịch vụ:", err);
-        alert("Không tải được thông tin gói dịch vụ");
-      }
-    };
-    fetchData();
-  }, []);
+      setGoiHienTai(resCurrent.data || null);
+      const list = Array.isArray(resList.data)
+  ? resList.data
+  : Array.isArray(resList.data?.data)
+    ? resList.data.data
+    : [];
+
+setGoiList(list);
+
+    } catch (err) {
+      console.error("Lỗi tải gói dịch vụ:", err);
+      alert("Không tải được thông tin gói dịch vụ");
+      setGoiList([]);
+    }
+  };
+
+  fetchData();
+}, []);
+
 
   const getNgayHet = (goi) =>
     goi?.ngay_het || goi?.ngay_het_han || goi?.expire_date || goi?.end_date || null;

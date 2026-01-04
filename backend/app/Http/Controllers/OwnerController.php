@@ -24,10 +24,10 @@ class OwnerController extends Controller
 
         // Lấy gói mới nhất của user
         $goi = DB::table('goidamua')
-            ->join('goidichvu', 'goidamua.goi_id', '=', 'goidichvu.id')
+            ->leftJoin('goidichvu', 'goidamua.goi_id', '=', 'goidichvu.id')
             ->where('goidamua.nguoi_dung_id', $user->id)
             ->orderByDesc('goidamua.ngay_mua')
-            ->select('goidichvu.ten_goi', 'goidamua.ngay_mua', 'goidamua.ngay_het', 'goidamua.trang_thai')
+            ->select( 'goidamua.goi_id', 'goidamua.gia',DB::raw("COALESCE(goidichvu.ten_goi, CONCAT('Gói đã xóa #', goidamua.goi_id)) AS ten_goi"), 'goidamua.ngay_mua', 'goidamua.ngay_het', 'goidamua.trang_thai')
             ->first();
 
         if (!$goi) {
@@ -246,6 +246,7 @@ class OwnerController extends Controller
                         DB::table('goidamua')->insert([
                             'nguoi_dung_id' => $userId,
                             'goi_id'        => $goiId,
+                            'gia'           => $goi->gia,
                             'ngay_mua'      => $ngayMua->format('Y-m-d'),
                             'ngay_het'      => $ngayHet->format('Y-m-d'),
                             'trang_thai'    => 'con_han'
