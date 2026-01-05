@@ -13,10 +13,15 @@ export default function Register() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState(""); // success hoặc error
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false); // Trạng thái loading khi submit
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Xóa lỗi cũ khi người dùng sửa
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: [] });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -24,14 +29,17 @@ export default function Register() {
     setErrors({});
     setMessage("");
     setMessageType("");
+    setIsSubmitting(true); // Bật loading
+
     try {
       const res = await axiosPublic.post("/register", formData);
+
       if (formData.role === "customer") {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
         setMessage("🎉 Đăng ký thành công, bạn đã được đăng nhập!");
         setMessageType("success");
-        navigate("/"); // chuyển về trang chủ sau khi đăng ký
+        setTimeout(() => navigate("/"), 1500); // Chuyển trang sau 1.5s để thấy message
       } else {
         setMessage(res.data.message || "✅ Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.");
         setMessageType("success");
@@ -43,6 +51,8 @@ export default function Register() {
         setMessage("❌ Có lỗi xảy ra, vui lòng thử lại!");
         setMessageType("error");
       }
+    } finally {
+      setIsSubmitting(false); // Tắt loading dù thành công hay lỗi
     }
   };
 
@@ -64,6 +74,7 @@ export default function Register() {
                 onChange={handleChange}
                 className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
+                disabled={isSubmitting}
               />
               {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name[0]}</p>}
             </div>
@@ -77,6 +88,7 @@ export default function Register() {
                 onChange={handleChange}
                 className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
+                disabled={isSubmitting}
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email[0]}</p>}
             </div>
@@ -90,6 +102,7 @@ export default function Register() {
                 onChange={handleChange}
                 className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
+                disabled={isSubmitting}
               />
               {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password[0]}</p>}
             </div>
@@ -102,6 +115,7 @@ export default function Register() {
                 value={formData.phone}
                 onChange={handleChange}
                 className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={isSubmitting}
               />
               {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone[0]}</p>}
             </div>
@@ -112,6 +126,7 @@ export default function Register() {
                 value={formData.role}
                 onChange={handleChange}
                 className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={isSubmitting}
               >
                 <option value="customer">Khách hàng</option>
                 <option value="owner">Chủ sân</option>
@@ -121,9 +136,20 @@ export default function Register() {
 
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-medium text-lg shadow-md"
+              className={`w-full py-3 rounded-lg font-medium text-lg shadow-md transition flex items-center justify-center gap-2
+                ${isSubmitting 
+                  ? "bg-green-400 cursor-not-allowed" 
+                  : "bg-green-600 hover:bg-green-700 text-white"}`}
+              disabled={isSubmitting}
             >
-              Đăng ký
+              {isSubmitting ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  Đang đăng ký...
+                </>
+              ) : (
+                "Đăng ký"
+              )}
             </button>
           </form>
 

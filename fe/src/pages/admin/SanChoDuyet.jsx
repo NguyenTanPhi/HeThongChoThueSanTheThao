@@ -1,20 +1,36 @@
+// src/pages/owner/SanChoDuyet.jsx
 import { useEffect, useState } from "react";
 import { axiosPrivate } from "../../api/instance";
 
 export default function SanChoDuyet() {
   const [sanList, setSanList] = useState([]);
+  const [loading, setLoading] = useState(true); // Thêm loading cho danh sách
   const [detailSan, setDetailSan] = useState(null);
   const [rejectId, setRejectId] = useState(null);
   const [reason, setReason] = useState("");
+  const [actionLoading, setActionLoading] = useState({}); // Loading cho từng hành động (duyệt/từ chối)
 
   useEffect(() => {
-    axiosPrivate
-      .get("/admin/san/cho-duyet")
-      .then((res) => setSanList(res.data))
-      .catch((err) => console.error(err));
+    const fetchSanChoDuyet = async () => {
+      try {
+        setLoading(true);
+        const res = await axiosPrivate.get("/admin/san/cho-duyet");
+        setSanList(res.data || []);
+      } catch (err) {
+        console.error(err);
+        showToast("❌ Không thể tải danh sách sân chờ duyệt!", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSanChoDuyet();
   }, []);
 
   const duyetSan = async (id) => {
+    if (actionLoading[id]) return;
+    setActionLoading((prev) => ({ ...prev, [id]: "duyet" }));
+
     try {
       await axiosPrivate.post(`/admin/san/${id}/duyet`, {
         trang_thai_duyet: "da_duyet",
@@ -23,7 +39,13 @@ export default function SanChoDuyet() {
       setSanList((prev) => prev.filter((s) => s.id !== id));
       showToast("✅ Duyệt sân thành công!", "success");
     } catch (err) {
-      showToast("❌ Lỗi duyệt sân!", "error");
+      showToast("❌ Lỗi khi duyệt sân!", "error");
+    } finally {
+      setActionLoading((prev) => {
+        const newState = { ...prev };
+        delete newState[id];
+        return newState;
+      });
     }
   };
 
@@ -32,6 +54,9 @@ export default function SanChoDuyet() {
       showToast("⚠️ Vui lòng nhập lý do từ chối!", "warning");
       return;
     }
+
+    if (actionLoading[rejectId]) return;
+    setActionLoading((prev) => ({ ...prev, [rejectId]: "tuchoi" }));
 
     try {
       await axiosPrivate.post(`/admin/san/${rejectId}/duyet`, {
@@ -45,19 +70,30 @@ export default function SanChoDuyet() {
 
       showToast("✅ Từ chối sân thành công!", "success");
     } catch (err) {
-      showToast("❌ Lỗi từ chối sân!", "error");
+      showToast("❌ Lỗi khi từ chối sân!", "error");
+    } finally {
+      setActionLoading((prev) => {
+        const newState = { ...prev };
+        delete newState[rejectId];
+        return newState;
+      });
     }
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 relative">
       <ToastContainer />
 
       <h1 className="text-3xl font-bold mb-8 text-gray-800 tracking-tight">
         🏟️ Sân chờ duyệt
       </h1>
 
-      {sanList.length === 0 ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <span className="loading loading-spinner loading-lg text-primary mb-4"></span>
+          <p className="text-lg text-gray-600 font-medium">Đang tải danh sách sân chờ duyệt...</p>
+        </div>
+      ) : sanList.length === 0 ? (
         <div className="p-8 bg-white rounded-2xl shadow text-center text-gray-600 border border-gray-100">
           Không có sân nào chờ duyệt
         </div>
@@ -76,6 +112,7 @@ export default function SanChoDuyet() {
                       : "/no-image.png"
                   }
                   className="w-32 h-32 object-cover rounded-xl shadow-md"
+                  alt={san.ten_san}
                 />
 
                 <div className="flex-1">
@@ -87,7 +124,7 @@ export default function SanChoDuyet() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-4 mt-6">
+              <div className="flex justify-end gap-4 mt-6 flex-wrap">
                 <button
                   className="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition font-medium"
                   onClick={() => setDetailSan(san)}
@@ -96,17 +133,27 @@ export default function SanChoDuyet() {
                 </button>
 
                 <button
-                  className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition font-medium"
+                  className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition font-medium min-w-[100px]"
                   onClick={() => duyetSan(san.id)}
+                  disabled={!!actionLoading[san.id]}
                 >
-                  ✅ Duyệt
+                  {actionLoading[san.id] === "duyet" ? (
+                    <span className="loading loading-spinner loading-sm"></span>
+                  ) : (
+                    "✅ Duyệt"
+                  )}
                 </button>
 
                 <button
-                  className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium"
+                  className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium min-w-[100px]"
                   onClick={() => setRejectId(san.id)}
+                  disabled={!!actionLoading[san.id]}
                 >
-                  ❌ Từ chối
+                  {actionLoading[san.id] === "tuchoi" ? (
+                    <span className="loading loading-spinner loading-sm"></span>
+                  ) : (
+                    "❌ Từ chối"
+                  )}
                 </button>
               </div>
             </div>
@@ -114,7 +161,7 @@ export default function SanChoDuyet() {
         </div>
       )}
 
-      {/* ✅ Modal chi tiết sân */}
+      {/* Modal chi tiết sân */}
       {detailSan && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-xl animate-fadeIn">
@@ -123,10 +170,11 @@ export default function SanChoDuyet() {
             <img
               src={
                 detailSan.hinh_anh
-                  ? `http://localhost:8000/storage/${detailSan.hinh_anh}`
+                  ? `${detailSan.hinh_anh}`
                   : "/no-image.png"
               }
               className="w-full h-64 object-cover rounded-xl shadow mb-5"
+              alt={detailSan.ten_san}
             />
 
             <div className="space-y-2 text-gray-700">
@@ -152,7 +200,7 @@ export default function SanChoDuyet() {
         </div>
       )}
 
-      {/* ✅ Modal từ chối */}
+      {/* Modal từ chối */}
       {rejectId && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md animate-fadeIn">
@@ -161,7 +209,7 @@ export default function SanChoDuyet() {
             <textarea
               className="textarea textarea-bordered w-full rounded-xl border-gray-300 focus:ring focus:ring-red-200"
               rows="4"
-              placeholder="Nhập lý do..."
+              placeholder="Nhập lý do chi tiết..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             ></textarea>
@@ -169,7 +217,10 @@ export default function SanChoDuyet() {
             <div className="flex justify-end gap-4 mt-5">
               <button
                 className="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 transition"
-                onClick={() => setRejectId(null)}
+                onClick={() => {
+                  setRejectId(null);
+                  setReason("");
+                }}
               >
                 Hủy
               </button>
@@ -177,8 +228,13 @@ export default function SanChoDuyet() {
               <button
                 className="px-5 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
                 onClick={tuChoiSan}
+                disabled={actionLoading[rejectId]}
               >
-                Xác nhận từ chối
+                {actionLoading[rejectId] ? (
+                  <span className="loading loading-spinner loading-sm"></span>
+                ) : (
+                  "Xác nhận từ chối"
+                )}
               </button>
             </div>
           </div>
@@ -188,7 +244,7 @@ export default function SanChoDuyet() {
   );
 }
 
-/* ✅ Toast đẹp */
+/* Toast đẹp */
 function ToastContainer() {
   if (!window.toast) {
     window.toast = {
@@ -196,23 +252,23 @@ function ToastContainer() {
         const div = document.createElement("div");
         div.className = `alert alert-${type} shadow-lg mb-3 bg-white border-l-4 rounded-xl px-4 py-3 ${
           type === "success"
-            ? "border-green-500"
+            ? "border-green-500 text-green-700"
             : type === "error"
-            ? "border-red-500"
+            ? "border-red-500 text-red-700"
             : type === "warning"
-            ? "border-yellow-500"
-            : "border-blue-500"
+            ? "border-yellow-500 text-yellow-700"
+            : "border-blue-500 text-blue-700"
         }`;
         div.innerHTML = `<span class="font-medium">${msg}</span>`;
 
         document.getElementById("toast-root").appendChild(div);
 
-        setTimeout(() => div.remove(), 2500);
+        setTimeout(() => div.remove(), 3500);
       },
     };
   }
 
-  return <div id="toast-root" className="fixed top-4 right-4 z-50"></div>;
+  return <div id="toast-root" className="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>;
 }
 
 function showToast(msg, type) {

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function QuanLySan({ setActiveTab }) {
   const [sanList, setSanList] = useState([]);
+  const [loading, setLoading] = useState(true); // Trạng thái loading
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,28 +23,27 @@ export default function QuanLySan({ setActiveTab }) {
   const navigate = useNavigate();
 
   const checkPackageBeforeAdd = async () => {
-  try {
-    const res = await axiosPrivate.get("/owner/goi-hien-tai");
-    const goi = res.data;
+    try {
+      const res = await axiosPrivate.get("/owner/goi-hien-tai");
+      const goi = res.data;
 
-    if (!goi || goi.trang_thai !== "con_han") {
-      setToast({
-        type: "error",
-        message: "Gói dịch vụ đã hết hạn hoặc chưa có. Vui lòng mua gói dịch vụ!",
-      });
-      setTimeout(() => setActiveTab("goi-dich-vu"), 2000);
-      return;
+      if (!goi || goi.trang_thai !== "con_han") {
+        setToast({
+          type: "error",
+          message: "Gói dịch vụ đã hết hạn hoặc chưa có. Vui lòng mua gói dịch vụ!",
+        });
+        setTimeout(() => setActiveTab("goi-dich-vu"), 2000);
+        return;
+      }
+
+      setIsAddModalOpen(true);
+    } catch (err) {
+      console.error(err);
+      setToast({ type: "error", message: "Không kiểm tra được gói dịch vụ!" });
+    } finally {
+      setTimeout(() => setToast(null), 3000);
     }
-
-    setIsAddModalOpen(true);
-  } catch (err) {
-    console.error(err);
-    setToast({ type: "error", message: "Không kiểm tra được gói dịch vụ!" });
-  } finally {
-    setTimeout(() => setToast(null), 3000);
-  }
-};
-
+  };
 
   useEffect(() => {
     fetchData();
@@ -51,10 +51,13 @@ export default function QuanLySan({ setActiveTab }) {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const res = await axiosPrivate.get("/owner/my-san");
       setSanList(res.data || []);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,7 +74,7 @@ export default function QuanLySan({ setActiveTab }) {
       }
     } catch (err) {
       console.error(err);
-      const errmess = err.response.data.message;
+      const errmess = err.response?.data?.message || "Có lỗi khi xóa sân!";
       setToast({ type: "error", message: errmess });
     } finally {
       setTimeout(() => setToast(null), 3000);
@@ -81,7 +84,7 @@ export default function QuanLySan({ setActiveTab }) {
   const handleAddSan = async () => {
     if (isSubmitting) return;
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
     const formData = new FormData();
     Object.keys(newSan).forEach((key) => formData.append(key, newSan[key]));
 
@@ -111,7 +114,7 @@ export default function QuanLySan({ setActiveTab }) {
       console.error(err);
       setToast({ type: "error", message: "Có lỗi khi đăng ký sân!" });
     } finally {
-       setIsSubmitting(false);
+      setIsSubmitting(false);
       setTimeout(() => setToast(null), 3000);
     }
   };
@@ -130,10 +133,17 @@ export default function QuanLySan({ setActiveTab }) {
           </button>
         </div>
 
-        {sanList.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <span className="loading loading-spinner loading-lg text-primary mb-4"></span>
+            <p className="text-lg text-gray-600 font-medium">Đang tải danh sách sân...</p>
+          </div>
+        ) : sanList.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🏟️</div>
-            <p className="text-xl text-gray-500">Chưa có sân nào. Khi thêm sân, danh sách sẽ hiện ở đây.</p>
+            <p className="text-xl text-gray-500">
+              Chưa có sân nào. Khi thêm sân, danh sách sẽ hiện ở đây.
+            </p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
@@ -180,7 +190,9 @@ export default function QuanLySan({ setActiveTab }) {
                   </p>
                   <p>
                     <b>Giá:</b>{" "}
-                    {san.gia_thue ? Number(san.gia_thue).toLocaleString("vi-VN") + "đ" : "Chưa có giá"}
+                    {san.gia_thue
+                      ? Number(san.gia_thue).toLocaleString("vi-VN") + "đ"
+                      : "Chưa có giá"}
                   </p>
                 </div>
 
@@ -196,7 +208,7 @@ export default function QuanLySan({ setActiveTab }) {
                   </button>
                 </div>
 
-                {/* Modal xóa */}
+                {/* Modal xác nhận xóa */}
                 {deleteSanId === san.id && (
                   <div
                     className="fixed inset-0 flex items-center justify-center z-50"
@@ -206,10 +218,10 @@ export default function QuanLySan({ setActiveTab }) {
                       className="absolute inset-0 bg-black bg-opacity-50"
                       onClick={() => setDeleteSanId(null)}
                     ></div>
-                    <div className="bg-white rounded-xl shadow-lg p-6 z-10 w-full max-w-sm">
-                      <h2 className="text-xl font-bold mb-4">Xác nhận xoá sân</h2>
+                    <div className="bg-white rounded-xl shadow-lg p-6 z-10 w-full max-w-sm mx-4">
+                      <h2 className="text-xl font-bold mb-4">Xác nhận xóa sân</h2>
                       <p className="mb-4">
-                        Bạn có chắc muốn xoá sân <b>"{san.ten_san}"</b> không?
+                        Bạn có chắc muốn xóa sân <b>"{san.ten_san}"</b> không?
                       </p>
                       <div className="flex justify-end gap-3">
                         <button className="btn" onClick={() => setDeleteSanId(null)}>
@@ -233,11 +245,14 @@ export default function QuanLySan({ setActiveTab }) {
           </div>
         )}
 
-        {/* Modal đăng ký sân */}
+        {/* Modal đăng ký sân mới */}
         {isAddModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setIsAddModalOpen(false)}></div>
-            <div className="bg-white rounded-xl shadow-lg p-6 z-10 w-full max-w-md">
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50"
+              onClick={() => setIsAddModalOpen(false)}
+            ></div>
+            <div className="bg-white rounded-xl shadow-lg p-6 z-10 w-full max-w-md mx-4">
               <h2 className="text-2xl font-bold mb-4">Đăng ký sân mới</h2>
               <div className="space-y-3">
                 <input
@@ -291,24 +306,35 @@ export default function QuanLySan({ setActiveTab }) {
                 <button className="btn" onClick={() => setIsAddModalOpen(false)}>
                   Hủy
                 </button>
-                <button className="btn btn-success" onClick={handleAddSan} disabled={isSubmitting}>
-                 {isSubmitting ? "Đang đăng ký..." : "Đăng ký"}
+                <button
+                  className="btn btn-success"
+                  onClick={handleAddSan}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      Đang đăng ký...
+                    </>
+                  ) : (
+                    "Đăng ký"
+                  )}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Toast */}
+        {/* Toast thông báo */}
         {toast && (
           <div
-            className={`fixed bottom-5 right-5 flex items-center gap-3 px-5 py-3 rounded-lg shadow-lg transition-all
-              ${toast.type === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
+            className={`fixed bottom-5 right-5 flex items-center gap-3 px-5 py-3 rounded-lg shadow-lg transition-all text-white z-50
+              ${toast.type === "success" ? "bg-green-600" : "bg-red-600"}`}
           >
             <span className="font-semibold">{toast.message}</span>
             {toast.message.includes("gói dịch vụ") && (
               <button
-                className="ml-3 bg-white text-red-600 px-3 py-1 rounded hover:bg-gray-200"
+                className="ml-3 bg-white text-red-600 px-3 py-1 rounded hover:bg-gray-200 text-sm font-medium"
                 onClick={() => {
                   setToast(null);
                   setActiveTab("goi-dich-vu");

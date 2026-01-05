@@ -8,6 +8,8 @@ use App\Models\San;
 use App\Models\Notification; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\Console\Input\Input;
 
 class DanhGiaController extends Controller
 {
@@ -45,6 +47,53 @@ class DanhGiaController extends Controller
 
         $san_id = $request->san_id;
         $nguoi_dung_id = $user->id;
+        $ngay_dat= Input::$ngay_dat;
+
+          $now = now(); // thời gian hiện tại
+
+$booking = DatSan::where('user_id', $nguoi_dung_id)
+    ->where('san_id', $san_id)
+    ->whereDate('ngay_dat', '<=', $now->toDateString()) // chỉ các trận đã/đang diễn ra
+    ->whereTime('gio_bat_dau', '<=', $now->format('H:i:s')) // bắt đầu trước giờ hiện tại
+    ->whereTime('gio_ket_thuc', '>=', $now->format('H:i:s')) // kết thúc sau giờ hiện tại
+    ->latest('ngay_dat')
+    ->first();
+     //  Log::info('booking', ['booking' => $booking->toArray()]);
+
+if ($booking) {
+    Log::info('booking', ['booking' => $booking->toArray()]);
+} else {
+    Log::info('booking not found', [
+        'user_id' => $nguoi_dung_id,
+        'san_id' => $san_id,
+    ]);
+
+    return response()->json([
+        'success' => false,
+        'message' => 'Không tìm thấy lịch đặt'
+    ], 404);
+}
+
+// Tính thời gian kết thúc trận đấu
+$gioKetThuc = strtotime($booking->ngay_dat . ' ' . $booking->gio_ket_thuc);
+Log::info('gio ket thuc',[ 'gio'=>$gioKetThuc]);
+$now = time();
+
+Log::info('booking debug', [
+    'ngay_dat' => $booking->ngay_dat,
+    'gio_ket_thuc' => $booking->gio_ket_thuc,
+    'gioKetThuc' => $gioKetThuc,
+    'now' => $now,
+    'da_hoan_thanh' => $booking->da_hoan_thanh
+]);
+
+// Nếu giờ kết thúc đã qua nhưng da_hoan_thanh chưa true → cập nhật
+if ($gioKetThuc !== false && $now >= $gioKetThuc && !$booking->da_hoan_thanh) {
+    Log::info('Đang cập nhật da_hoan_thanh');
+    $booking->da_hoan_thanh = 1;
+    $booking->save();
+} $booking->save();
+
 
         $daHoanThanh = DatSan::where('user_id', $nguoi_dung_id)
     ->where('san_id', $san_id)

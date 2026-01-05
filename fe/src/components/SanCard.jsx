@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 export default function SanCard({ san }) {
-  // 🔹 Lọc lịch hợp lệ (chưa quá nửa thời gian)
+ 
   const lichHopLe =
     san.lich_trong?.filter((lich) => {
       const start = new Date(`${lich.ngay}T${lich.gio_bat_dau}`);

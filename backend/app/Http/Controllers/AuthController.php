@@ -100,18 +100,32 @@ public function confirmOwner(Request $request)
         'name' => 'required|string|max:255',
         'email' => 'required|email|unique:nguoi_dung,email,' . $user->id,
         'phone' => 'nullable|string|max:15',
-        'password' => 'nullable|string|min:6',
+        'current_password'      => 'nullable|string',
+        'password'              => 'nullable|string|min:6|confirmed',
     ]);
 
+    // Nếu gửi password mới → phải có current_password và đúng
     if (!empty($validated['password'])) {
-        $validated['password'] = bcrypt($validated['password']);
+        if (empty($validated['current_password'])) {
+            return response()->json(['message' => 'Vui lòng nhập mật khẩu hiện tại để đổi mật khẩu mới'], 422);
+        }
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json(['message' => 'Mật khẩu hiện tại không đúng'], 422);
+        }
+
+        $validated['password'] = Hash::make($validated['password']);
     } else {
         unset($validated['password']);
+        unset($validated['current_password']);
     }
 
     $user->update($validated);
 
-    return response()->json(['message' => 'Cập nhật thành công', 'user' => $user]);
+    return response()->json([
+        'message' => 'Cập nhật thông tin thành công',
+        'user'    => $user->fresh()
+    ]);
 }
 
 public function forgotPassword(Request $request)

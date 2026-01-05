@@ -183,22 +183,6 @@ public function getLichTrong(Request $request, $id)
 {
     $user = $request->user();
     
-    // CHECK GÓI DỊCH VỤ
-    $goi = DB::table('goidamua')
-    ->where('nguoi_dung_id', $user->id)
-    ->whereDate('ngay_het', '>=', now())
-    ->orderByDesc('ngay_het')
-    ->first();
-
-if (!$goi) {
-    return response()->json([
-        'success' => false,
-        'require_package' => true,
-        'message' => 'Bạn cần có gói dịch vụ để thực hiện chức năng này!'
-    ], 403);
-}
-
-
     $san = \App\Models\San::where('id', $id)->where('owner_id', $user->id)->firstOrFail();
 
     $lich = DB::table('lich_san')

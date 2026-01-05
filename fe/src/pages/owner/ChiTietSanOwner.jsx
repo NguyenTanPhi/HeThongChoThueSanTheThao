@@ -201,8 +201,12 @@ export default function ChiTietSanOwner({ setActiveTab }) {
           <span>{toast.message}</span>
           {toast.action && (
             <button
-              onClick={toast.action}
+              onClick={() => {
+                  setToast(null);
+                  setActiveTab("goi-dich-vu");
+                }}
               className="ml-4 bg-white text-red-600 px-3 py-1 rounded hover:bg-gray-200"
+              
             >
               Mua gói ngay
             </button>

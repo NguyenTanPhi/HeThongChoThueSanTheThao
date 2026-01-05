@@ -1,8 +1,11 @@
+// src/pages/admin/QuanLyGoiDichVu.jsx (hoặc tên file tương ứng)
 import { useEffect, useState } from "react";
 import { axiosPrivate } from "../../api/instance";
 
 export default function GoiDichVu() {
   const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true); // Loading danh sách gói
+  const [actionLoading, setActionLoading] = useState({}); // Loading cho từng hành động (thêm/sửa/xóa)
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -22,14 +25,21 @@ export default function GoiDichVu() {
 
   const fetchPackages = async () => {
     try {
+      setLoading(true);
       const res = await axiosPrivate.get("/admin/goi-dich-vu");
-     setPackages(res.data.data || []);
+      setPackages(res.data.data || []);
     } catch (err) {
-      showToast("Không thể tải danh sách gói!", "error");
+      console.error(err);
+      showToast("Không thể tải danh sách gói dịch vụ!", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAdd = async () => {
+    if (actionLoading["add"]) return;
+    setActionLoading((prev) => ({ ...prev, add: true }));
+
     try {
       await axiosPrivate.post("/admin/goi-dich-vu", {
         ...form,
@@ -37,16 +47,25 @@ export default function GoiDichVu() {
         thoi_han: Number(form.thoi_han),
       });
 
-      showToast("Thêm gói thành công!", "success");
+      showToast("Thêm gói dịch vụ thành công!", "success");
       setIsAddOpen(false);
       resetForm();
       fetchPackages();
     } catch (err) {
-      showToast("❌ Lỗi thêm gói!", "error");
+      showToast("❌ Lỗi khi thêm gói!", "error");
+    } finally {
+      setActionLoading((prev) => {
+        const newState = { ...prev };
+        delete newState["add"];
+        return newState;
+      });
     }
   };
 
   const handleEdit = async () => {
+    if (actionLoading[`edit_${selected?.id}`]) return;
+    setActionLoading((prev) => ({ ...prev, [`edit_${selected.id}`]: true }));
+
     try {
       await axiosPrivate.put(`/admin/goi-dich-vu/${selected.id}`, {
         ...form,
@@ -59,17 +78,32 @@ export default function GoiDichVu() {
       resetForm();
       fetchPackages();
     } catch (err) {
-      showToast("❌ Lỗi cập nhật gói!", "error");
+      showToast("❌ Lỗi khi cập nhật gói!", "error");
+    } finally {
+      setActionLoading((prev) => {
+        const newState = { ...prev };
+        delete newState[`edit_${selected.id}`];
+        return newState;
+      });
     }
   };
 
   const handleDelete = async (id) => {
+    if (actionLoading[`delete_${id}`]) return;
+    setActionLoading((prev) => ({ ...prev, [`delete_${id}`]: true }));
+
     try {
       await axiosPrivate.delete(`/admin/goi-dich-vu/${id}`);
       showToast("✅ Xóa gói thành công!", "success");
       fetchPackages();
     } catch (err) {
-      showToast("❌ Lỗi xóa gói!", "error");
+      showToast("❌ Lỗi khi xóa gói!", "error");
+    } finally {
+      setActionLoading((prev) => {
+        const newState = { ...prev };
+        delete newState[`delete_${id}`];
+        return newState;
+      });
     }
   };
 
@@ -84,7 +118,7 @@ export default function GoiDichVu() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 relative">
       <ToastContainer />
 
       <h1 className="text-3xl font-bold mb-6 text-gray-800 tracking-tight">
@@ -94,64 +128,94 @@ export default function GoiDichVu() {
       <button
         className="px-5 py-3 rounded-xl bg-green-600 text-white font-medium hover:bg-green-700 transition mb-6 shadow"
         onClick={() => setIsAddOpen(true)}
+        disabled={loading || actionLoading["add"]}
       >
-        + Thêm gói mới
+        {actionLoading["add"] ? (
+          <span className="loading loading-spinner loading-sm"></span>
+        ) : (
+          "+ Thêm gói mới"
+        )}
       </button>
 
-      <div className="overflow-x-auto bg-white rounded-2xl shadow-lg border border-gray-100">
-        <table className="table table-zebra">
-          <thead className="bg-gray-50 text-gray-700 font-semibold">
-            <tr>
-              <th>Tên gói</th>
-              <th>Giá</th>
-              <th>Thời hạn</th>
-              <th>Trạng thái</th>
-              <th className="text-center">Hành động</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {packages.map((g) => (
-              <tr key={g.id} className="hover:bg-gray-50 transition">
-                <td className="font-medium">{g.ten_goi}</td>
-                <td>{Number(g.gia).toLocaleString()}đ</td>
-                <td>{g.thoi_han} ngày</td>
-                <td>
-                  {g.trang_thai === "hoat_dong" ? (
-                    <span className="px-3 py-1 rounded-lg bg-green-100 text-green-700 text-sm font-semibold">
-                      Hoạt động
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 rounded-lg bg-red-100 text-red-700 text-sm font-semibold">
-                      Ngừng bán
-                    </span>
-                  )}
-                </td>
-
-                <td className="flex gap-3 justify-center">
-                  <button
-                    className="px-4 py-2 rounded-xl bg-blue-100 text-blue-700 hover:bg-blue-200 transition font-medium"
-                    onClick={() => {
-                      setSelected(g);
-                      setForm(g);
-                      setIsEditOpen(true);
-                    }}
-                  >
-                    ✏️ Sửa
-                  </button>
-
-                  <button
-                    className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium"
-                    onClick={() => setDeleteId(g.id)}
-                  >
-                    🗑 Xóa
-                  </button>
-                </td>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow">
+          <span className="loading loading-spinner loading-lg text-primary mb-4"></span>
+          <p className="text-lg text-gray-600 font-medium">Đang tải danh sách gói dịch vụ...</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto bg-white rounded-2xl shadow-lg border border-gray-100">
+          <table className="table table-zebra w-full">
+            <thead className="bg-gray-50 text-gray-700 font-semibold">
+              <tr>
+                <th>Tên gói</th>
+                <th>Giá</th>
+                <th>Thời hạn</th>
+                <th>Trạng thái</th>
+                <th className="text-center">Hành động</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+
+            <tbody>
+              {packages.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-10 text-gray-500">
+                    Chưa có gói dịch vụ nào
+                  </td>
+                </tr>
+              ) : (
+                packages.map((g) => (
+                  <tr key={g.id} className="hover:bg-gray-50 transition">
+                    <td className="font-medium">{g.ten_goi}</td>
+                    <td>{Number(g.gia).toLocaleString()}đ</td>
+                    <td>{g.thoi_han} ngày</td>
+                    <td>
+                      {g.trang_thai === "hoat_dong" ? (
+                        <span className="px-3 py-1 rounded-lg bg-green-100 text-green-700 text-sm font-semibold">
+                          Hoạt động
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-lg bg-red-100 text-red-700 text-sm font-semibold">
+                          Ngừng bán
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="flex gap-3 justify-center">
+                      <button
+                        className="px-4 py-2 rounded-xl bg-blue-100 text-blue-700 hover:bg-blue-200 transition font-medium min-w-[80px]"
+                        onClick={() => {
+                          setSelected(g);
+                          setForm(g);
+                          setIsEditOpen(true);
+                        }}
+                        disabled={!!actionLoading[`edit_${g.id}`]}
+                      >
+                        {actionLoading[`edit_${g.id}`] ? (
+                          <span className="loading loading-spinner loading-sm"></span>
+                        ) : (
+                          "✏️ Sửa"
+                        )}
+                      </button>
+
+                      <button
+                        className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition font-medium min-w-[80px]"
+                        onClick={() => setDeleteId(g.id)}
+                        disabled={!!actionLoading[`delete_${g.id}`]}
+                      >
+                        {actionLoading[`delete_${g.id}`] ? (
+                          <span className="loading loading-spinner loading-sm"></span>
+                        ) : (
+                          "🗑 Xóa"
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Modal thêm */}
       {isAddOpen && (
@@ -161,8 +225,16 @@ export default function GoiDichVu() {
             <button className="btn" onClick={() => setIsAddOpen(false)}>
               Hủy
             </button>
-            <button className="btn btn-success" onClick={handleAdd}>
-              Thêm
+            <button
+              className="btn btn-success"
+              onClick={handleAdd}
+              disabled={actionLoading["add"]}
+            >
+              {actionLoading["add"] ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : (
+                "Thêm"
+              )}
             </button>
           </div>
         </Modal>
@@ -176,8 +248,16 @@ export default function GoiDichVu() {
             <button className="btn" onClick={() => setIsEditOpen(false)}>
               Hủy
             </button>
-            <button className="btn btn-info" onClick={handleEdit}>
-              Cập nhật
+            <button
+              className="btn btn-info"
+              onClick={handleEdit}
+              disabled={actionLoading[`edit_${selected?.id}`]}
+            >
+              {actionLoading[`edit_${selected?.id}`] ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : (
+                "Cập nhật"
+              )}
             </button>
           </div>
         </Modal>
@@ -201,8 +281,13 @@ export default function GoiDichVu() {
                 handleDelete(deleteId);
                 setDeleteId(null);
               }}
+              disabled={actionLoading[`delete_${deleteId}`]}
             >
-              🗑 Xóa
+              {actionLoading[`delete_${deleteId}`] ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : (
+                "🗑 Xóa"
+              )}
             </button>
           </div>
         </Modal>
@@ -232,10 +317,11 @@ function PackageForm({ form, setForm }) {
 
       <input
         type="number"
-        placeholder="Giá"
+        placeholder="Giá (VNĐ)"
         className="input input-bordered w-full rounded-xl"
         value={form.gia}
         onChange={(e) => setForm({ ...form, gia: e.target.value })}
+        min="0"
       />
 
       <input
@@ -244,6 +330,7 @@ function PackageForm({ form, setForm }) {
         className="input input-bordered w-full rounded-xl"
         value={form.thoi_han}
         onChange={(e) => setForm({ ...form, thoi_han: e.target.value })}
+        min="1"
       />
 
       <select
@@ -265,7 +352,11 @@ function Modal({ title, children, onClose }) {
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg animate-fadeIn">
         <h3 className="font-bold text-2xl mb-4 text-gray-900">{title}</h3>
         {children}
-        <button className="modal-backdrop" onClick={onClose}></button>
+        {/* Nút đóng modal khi click ngoài (backdrop) */}
+        <button
+          className="absolute inset-0 -z-10"
+          onClick={onClose}
+        ></button>
       </div>
     </div>
   );
@@ -310,13 +401,16 @@ function ToastContainer() {
         setTimeout(() => {
           div.classList.add("animate-slide-out");
           setTimeout(() => div.remove(), 300);
-        }, 2500);
+        }, 3500);
       },
     };
   }
 
   return (
-    <div id="toast-root" className="fixed top-5 right-5 z-[9999] flex flex-col items-end"></div>
+    <div
+      id="toast-root"
+      className="fixed top-5 right-5 z-[9999] flex flex-col items-end gap-2"
+    ></div>
   );
 }
 
