@@ -74,6 +74,13 @@ public function confirmOwner(Request $request)
             return response()->json(['message' => 'Sai thông tin đăng nhập'], 401);
         }
 
+        if ($user->status === 'locked') {
+        return response()->json([
+            'message' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.'
+        ], 403);
+        }
+
+
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([

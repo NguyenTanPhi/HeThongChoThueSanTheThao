@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Input\Input;
-
+use Carbon\Carbon;
 class DanhGiaController extends Controller
 {
     //Kiểm tra đánh giá hay chưa
@@ -33,118 +33,78 @@ class DanhGiaController extends Controller
 
     //Lưu đánh giá và gửi tb cho owner
     public function store(Request $request)
-    {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Chưa đăng nhập'], 401);
-        }
+{
+    $user = $request->user();
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Chưa đăng nhập'
+        ], 401);
+    }
 
-        $request->validate([
-            'san_id'        => 'required|exists:san,id',
-            'diem_danh_gia' => 'required|integer|min:1|max:5',
-            'noi_dung'      => 'required|string|min:10|max:1000',
-        ]);
-
-        $san_id = $request->san_id;
-        $nguoi_dung_id = $user->id;
-        $ngay_dat= Input::$ngay_dat;
-
-          $now = now(); // thời gian hiện tại
-
-$booking = DatSan::where('user_id', $nguoi_dung_id)
-    ->where('san_id', $san_id)
-    ->whereDate('ngay_dat', '<=', $now->toDateString()) // chỉ các trận đã/đang diễn ra
-    ->whereTime('gio_bat_dau', '<=', $now->format('H:i:s')) // bắt đầu trước giờ hiện tại
-    ->whereTime('gio_ket_thuc', '>=', $now->format('H:i:s')) // kết thúc sau giờ hiện tại
-    ->latest('ngay_dat')
-    ->first();
-     //  Log::info('booking', ['booking' => $booking->toArray()]);
-
-if ($booking) {
-    Log::info('booking', ['booking' => $booking->toArray()]);
-} else {
-    Log::info('booking not found', [
-        'user_id' => $nguoi_dung_id,
-        'san_id' => $san_id,
+    $request->validate([
+        'san_id'        => 'required|exists:san,id',
+        'diem_danh_gia' => 'required|integer|min:1|max:5',
+        'noi_dung'      => 'required|string|min:10|max:1000',
     ]);
 
-    return response()->json([
-        'success' => false,
-        'message' => 'Không tìm thấy lịch đặt'
-    ], 404);
-}
+    $now = Carbon::now();
 
-// Tính thời gian kết thúc trận đấu
-$gioKetThuc = strtotime($booking->ngay_dat . ' ' . $booking->gio_ket_thuc);
-Log::info('gio ket thuc',[ 'gio'=>$gioKetThuc]);
-$now = time();
+    // 1️⃣ Tìm booking đã KẾT THÚC
+    $booking = DatSan::where('user_id', $user->id)
+        ->where('san_id', $request->san_id)
+        ->whereRaw(
+            "STR_TO_DATE(CONCAT(ngay_dat, ' ', gio_ket_thuc), '%Y-%m-%d %H:%i:%s') < ?",
+            [$now]
+        )
+        ->latest('ngay_dat')
+        ->first();
 
-Log::info('booking debug', [
-    'ngay_dat' => $booking->ngay_dat,
-    'gio_ket_thuc' => $booking->gio_ket_thuc,
-    'gioKetThuc' => $gioKetThuc,
-    'now' => $now,
-    'da_hoan_thanh' => $booking->da_hoan_thanh
-]);
-
-// Nếu giờ kết thúc đã qua nhưng da_hoan_thanh chưa true → cập nhật
-if ($gioKetThuc !== false && $now >= $gioKetThuc && !$booking->da_hoan_thanh) {
-    Log::info('Đang cập nhật da_hoan_thanh');
-    $booking->da_hoan_thanh = 1;
-    $booking->save();
-} $booking->save();
-
-
-        $daHoanThanh = DatSan::where('user_id', $nguoi_dung_id)
-    ->where('san_id', $san_id)
-    ->where('da_hoan_thanh', true)
-    ->exists();
-
-if (!$daHoanThanh) {
-    return response()->json([
-        'success' => false,
-        'message' => 'Chỉ được đánh giá sau khi hoàn thành trận đấu'
-    ], 403);
-}
-
-
-        // Kiểm tra đã đánh giá chưa
-        $daTonTai = DanhGia::where('nguoi_dung_id', $nguoi_dung_id)
-                           ->where('san_id', $san_id)
-                           ->exists();
-
-        if ($daTonTai) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bạn đã đánh giá sân này rồi!'
-            ], 400);
-        }
-
-        // Tạo đánh giá
-        $danhGia = DanhGia::create([
-            'nguoi_dung_id' => $nguoi_dung_id,
-            'san_id'        => $san_id,
-            'diem_danh_gia' => $request->diem_danh_gia,
-            'noi_dung'      => $request->noi_dung,
-        ]);
-
-        //Gửi thông báo cho owner
-        $san = San::find($san_id);
-        if ($san && $san->owner_id) {
-            Notification::create([
-                'user_id'  => $san->owner_id,
-                'noi_dung' => "Khách hàng {$user->name} vừa đánh giá sân \"{$san->ten_san}\" – {$request->diem_danh_gia}★",
-                'ly_do'    => $request->noi_dung,
-                'da_doc'   => 0,
-            ]);
-        }
-
+    if (!$booking) {
         return response()->json([
-            'success' => true,
-            'message' => 'Cảm ơn bạn đã đánh giá!',
-            'data'    => $danhGia
-        ], 201);
+            'success' => false,
+            'message' => 'Chỉ được đánh giá sau khi trận đấu kết thúc'
+        ], 403);
     }
+
+    // 2️⃣ Không cho đánh giá trùng
+    $daTonTai = DanhGia::where('nguoi_dung_id', $user->id)
+        ->where('san_id', $request->san_id)
+        ->exists();
+
+    if ($daTonTai) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Bạn đã đánh giá sân này rồi!'
+        ], 409);
+    }
+
+    // 3️⃣ Tạo đánh giá
+    $danhGia = DanhGia::create([
+        'nguoi_dung_id' => $user->id,
+        'san_id'        => $request->san_id,
+        'diem_danh_gia' => $request->diem_danh_gia,
+        'noi_dung'      => $request->noi_dung,
+        'ngay_danh_gia'  => now(),
+    ]);
+
+    // 4️⃣ Gửi thông báo cho chủ sân
+    $san = San::find($request->san_id);
+    if ($san && $san->owner_id) {
+        Notification::create([
+            'user_id'  => $san->owner_id,
+            'noi_dung' => "Khách hàng {$user->name} vừa đánh giá sân \"{$san->ten_san}\" – {$request->diem_danh_gia}★",
+            'ly_do'    => $request->noi_dung,
+            'da_doc'   => 0,
+        ]);
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Cảm ơn bạn đã đánh giá!',
+        'data'    => $danhGia
+    ], 201);
+}
 
     //Lấy đánh giá của sân
     public function getBySan($san_id)

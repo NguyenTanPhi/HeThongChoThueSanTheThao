@@ -33,7 +33,17 @@ export default function Login() {
   else navigate("/");
 
 } catch (err) {
-  setError("Sai email hoặc mật khẩu");
+  if (err.response) {
+    const status = err.response.status;
+
+    if (status === 403) {
+      setError("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+    } else {
+      setError("Sai email hoặc mật khẩu");
+    }
+  } else {
+    setError("Không thể kết nối đến server");
+  }
 } finally {
   setLoading(false);
 }

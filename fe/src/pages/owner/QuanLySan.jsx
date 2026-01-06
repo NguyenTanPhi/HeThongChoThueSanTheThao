@@ -174,6 +174,8 @@ export default function QuanLySan({ setActiveTab }) {
                       ? "Đang hoạt động"
                       : san.trang_thai_duyet === "cho_duyet"
                       ? "Chờ duyệt"
+                      : san.trang_thai_duyet === "tu_choi"
+                      ? "Bị từ chối"
                       : san.trang_thai_duyet}
                   </span>
                 </div>

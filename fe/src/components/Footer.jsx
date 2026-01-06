@@ -44,7 +44,7 @@ export default function Footer() {
             <h3 className="text-xl font-semibold text-white mb-4">Hỗ trợ</h3>
             <ul className="space-y-2 text-gray-400">
               <li>📍 180 Cao Lỗ, Quận 8, TP.HCM</li>
-              <li>📧 nq2018.nguyentanphi311@gmail.com</li>
+              <li>📧 dh52111486@student.stu.edu.vn</li>
               <li>📱 0703 760 626</li>
               <li className="flex items-center gap-3 mt-3">
                 <a
@@ -55,7 +55,7 @@ export default function Footer() {
                   Zalo
                 </a>
                 <a
-                  href="https://facebook.com"
+                  href="https://www.facebook.com/phi.796171"
                   target="_blank"
                   className="bg-blue-600 text-white px-3 py-1 rounded-full shadow hover:bg-blue-700 text-sm"
                 >
