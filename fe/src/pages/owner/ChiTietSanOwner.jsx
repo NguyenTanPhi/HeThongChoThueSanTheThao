@@ -161,7 +161,7 @@ export default function ChiTietSanOwner({ setActiveTab }) {
                       showToast("error", "Thêm lịch thất bại. Kiểm tra dữ liệu!");
                     }
                   }
-                }}
+                }}  
                 onDeleteSlot={confirmDeleteLich}
               />
             </div>

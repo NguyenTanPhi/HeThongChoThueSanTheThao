@@ -26,7 +26,7 @@ class SanController extends Controller
                 'owner_id'
             )
             ->with([
-                'owner:id,name',
+                  'owner:id,name,email,phone',
             ])
             // 🔥 CHỈ CHECK TỒN TẠI, KHÔNG LOAD DATA
             ->withExists([
@@ -39,10 +39,10 @@ class SanController extends Controller
             $query->where('loai_san', $request->loai_san);
         }
 
-        if ($request->dia_chi) {
-            $query->where('dia_chi', 'like', '%' . $request->dia_chi . '%');
-        }
-
+       if ($request->dia_chi) {
+    $keyword = trim($request->dia_chi);
+    $query->where('dia_chi', 'like', "%$keyword%");
+}
         return $query->paginate(12);
     });
 
@@ -55,7 +55,7 @@ class SanController extends Controller
     $san = cache()->remember("san_detail_$id", 300, function () use ($id) {
         return San::select('id','ten_san','loai_san','gia_thue','dia_chi','mo_ta','hinh_anh','owner_id',  'trang_thai_duyet')
             ->with([
-                'owner:id,name',
+                'owner:id,name,email,phone',
                 'danhGia:id,san_id,nguoi_dung_id,noi_dung'
             ])
             ->findOrFail($id);
@@ -88,11 +88,23 @@ if (!$goi) {
     $request->validate([
         'ten_san' => 'required|string|max:255',
         'loai_san' => 'required|string',
-        'gia_thue' => 'required|numeric|min:100000',
+        'gia_thue' => 'required|numeric|min:50000',
         'dia_chi' => 'required|string',
         'mo_ta' => 'nullable|string',
         'hinh_anh' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
     ]);
+
+    // ✅ CHECK ĐỊA CHỈ PHẢI ĐỦ: Số nhà, Phường/Xã, Quận/Huyện, Thành phố
+$diaChi = $request->dia_chi;
+
+// Bắt buộc có ít nhất 3 dấu phẩy
+if (substr_count($diaChi, ',') < 3) {
+    return response()->json([
+        'success' => false,
+        'message' => 'Vui lòng nhập đầy đủ địa chỉ (Số nhà, Phường/Xã, Quận/Huyện, Thành phố)'
+    ], 422);
+}
+
     $data = $request->except('hinh_anh');
     //$data = $request->all();
     $data['owner_id'] = $user->id;
@@ -144,7 +156,20 @@ if (!$goi) {
     public function destroy(Request $request, $id)
 {
     $user = $request->user();
-    $san = San::where('owner_id', $user->id)->where('id', $id)->first();
+
+    $san = San::where('owner_id', $user->id)
+              ->where('id', $id)
+              ->first();
+
+    // ✅ CHECK TỒN TẠI TRƯỚC
+    if (!$san) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Không tìm thấy sân hoặc bạn không có quyền xóa'
+        ], 404);
+    }
+
+    // ✅ SAU ĐÓ MỚI CHECK ĐÃ ĐẶT CHƯA
     $hasBooked = $san->lichSan()
                      ->where('trang_thai', 'da_dat')
                      ->exists();
@@ -155,13 +180,8 @@ if (!$goi) {
             'message' => 'Không thể xóa sân vì đã có lịch được đặt'
         ], 400);
     }
-    if (!$san) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Không tìm thấy sân hoặc bạn không có quyền xóa'
-        ], 404);
-    }
 
+    // Xóa ảnh + xóa sân
     if ($san->hinh_anh) {
         $filePath = public_path('storage/' . $san->hinh_anh);
         if (file_exists($filePath)) {
@@ -176,6 +196,7 @@ if (!$goi) {
         'message' => 'Đã xóa sân thành công!'
     ]);
 }
+
 
 
 

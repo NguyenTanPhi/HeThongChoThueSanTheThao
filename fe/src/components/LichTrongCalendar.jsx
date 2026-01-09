@@ -90,7 +90,7 @@ export default function LichTrongCalendar({ lichTrong, onAddSlot, onDeleteSlot }
     const gio_ket_thuc = format(priceModal.end, 'HH:mm');
 
     onAddSlot({ ngay, gio_bat_dau, gio_ket_thuc, gia });
-    showToast('success', 'Đã thêm khung giờ trống thành công!');
+    
 
     // Reset modal
     setPriceModal({ open: false, start: null, end: null });

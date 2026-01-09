@@ -17,6 +17,13 @@ export default function QuanLySan({ setActiveTab }) {
     mo_ta: "",
     hinh_anh: null,
   });
+  const [diaChi, setDiaChi] = useState({
+  so_nha: "",
+  phuong_xa: "",
+  quan_huyen: "",
+  thanh_pho: "",
+});
+
   const [toast, setToast] = useState(null);
   const [deleteSanId, setDeleteSanId] = useState(null);
 
@@ -82,42 +89,82 @@ export default function QuanLySan({ setActiveTab }) {
   };
 
   const handleAddSan = async () => {
-    if (isSubmitting) return;
+  if (isSubmitting) return;
+  setIsSubmitting(true);
 
-    setIsSubmitting(true);
-    const formData = new FormData();
-    Object.keys(newSan).forEach((key) => formData.append(key, newSan[key]));
+  // ✅ GỘP ĐỊA CHỈ
+  const diaChiDayDu = [
+    diaChi.so_nha,
+    diaChi.phuong_xa,
+    diaChi.quan_huyen,
+    diaChi.thanh_pho,
+  ]
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(", ");
 
-    try {
-      const res = await axiosPrivate.post("/owner/san", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+  // ✅ CHECK FRONTEND TRƯỚC
+  if (diaChiDayDu.split(",").length < 4) {
+    setToast({
+      type: "error",
+      message: "Vui lòng nhập đầy đủ địa chỉ",
+    });
+    setIsSubmitting(false);
+    return;
+  }
+
+  const formData = new FormData();
+
+  // ❌ KHÔNG GỬI newSan.dia_chi
+  Object.keys(newSan).forEach((key) => {
+    if (key !== "dia_chi") {
+      formData.append(key, newSan[key]);
+    }
+  });
+
+  // ✅ GỬI ĐỊA CHỈ ĐÃ GỘP
+  formData.append("dia_chi", diaChiDayDu);
+
+  try {
+    const res = await axiosPrivate.post("/owner/san", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    if (res.data.success) {
+      setToast({ type: "success", message: res.data.message });
+      setIsAddModalOpen(false);
+
+      setNewSan({
+        ten_san: "",
+        loai_san: "",
+        gia_thue: "",
+        dia_chi: "",
+        mo_ta: "",
+        hinh_anh: null,
       });
 
-      if (res.data.success) {
-        setToast({ type: "success", message: res.data.message || "Đăng ký sân thành công!" });
-        setIsAddModalOpen(false);
-        setNewSan({
-          ten_san: "",
-          loai_san: "",
-          gia_thue: "",
-          dia_chi: "",
-          mo_ta: "",
-          hinh_anh: null,
-        });
-        fetchData();
-      } else if (res.data.require_package) {
-        setToast({ type: "error", message: res.data.package_message });
-      } else {
-        setToast({ type: "error", message: "Không thể đăng ký sân mới!" });
-      }
-    } catch (err) {
-      console.error(err);
-      setToast({ type: "error", message: "Có lỗi khi đăng ký sân!" });
-    } finally {
-      setIsSubmitting(false);
-      setTimeout(() => setToast(null), 3000);
+      setDiaChi({
+        so_nha: "",
+        phuong_xa: "",
+        quan_huyen: "",
+        thanh_pho: "",
+      });
+
+      fetchData();
+    } else {
+      setToast({ type: "error", message: res.data.message });
     }
-  };
+  } catch (err) {
+    setToast({
+      type: "error",
+      message: err.response?.data?.message || "Có lỗi khi đăng ký sân!",
+    });
+  } finally {
+    setIsSubmitting(false);
+    setTimeout(() => setToast(null), 3000);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -285,13 +332,40 @@ export default function QuanLySan({ setActiveTab }) {
                   value={newSan.gia_thue}
                   onChange={(e) => setNewSan({ ...newSan, gia_thue: e.target.value })}
                 />
-                <input
-                  type="text"
-                  placeholder="Địa chỉ"
-                  className="input input-bordered w-full"
-                  value={newSan.dia_chi}
-                  onChange={(e) => setNewSan({ ...newSan, dia_chi: e.target.value })}
-                />
+                <div className="grid grid-cols-1 gap-3">
+  <input
+    type="text"
+    placeholder="Số nhà, tên đường"
+    className="input input-bordered w-full"
+    value={diaChi.so_nha}
+    onChange={(e) => setDiaChi({ ...diaChi, so_nha: e.target.value })}
+  />
+
+  <input
+    type="text"
+    placeholder="Phường / Xã"
+    className="input input-bordered w-full"
+    value={diaChi.phuong_xa}
+    onChange={(e) => setDiaChi({ ...diaChi, phuong_xa: e.target.value })}
+  />
+
+  <input
+    type="text"
+    placeholder="Quận / Huyện"
+    className="input input-bordered w-full"
+    value={diaChi.quan_huyen}
+    onChange={(e) => setDiaChi({ ...diaChi, quan_huyen: e.target.value })}
+  />
+
+  <input
+    type="text"
+    placeholder="Tỉnh / Thành phố"
+    className="input input-bordered w-full"
+    value={diaChi.thanh_pho}
+    onChange={(e) => setDiaChi({ ...diaChi, thanh_pho: e.target.value })}
+  />
+</div>
+
                 <textarea
                   placeholder="Mô tả"
                   className="textarea textarea-bordered w-full"

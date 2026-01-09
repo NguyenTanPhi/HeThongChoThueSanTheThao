@@ -72,19 +72,39 @@ export default function SanDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
-            <img 
-              src={`${san.hinh_anh}`} 
-              alt={san.ten_san}
-              loading="lazy"
-              className="w-full h-96 object-cover rounded-2xl shadow-xl"
-            />
-          </div>
+  <img 
+    src={`${san.hinh_anh}`} 
+    alt={san.ten_san}
+    loading="lazy"
+    className="w-full h-96 object-cover rounded-2xl shadow-xl"
+  />
+
+  {/* Thông tin chủ sân – đặt dưới ảnh */}
+  {san.owner && (
+    <div className="mt-4 border rounded-xl p-4 bg-gray-50">
+      <h4 className="text-lg font-semibold mb-3">Thông tin liên hệ</h4>
+
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-lg">
+          {san.owner.name.charAt(0)}
+        </div>
+
+        <div className="flex-1">
+          <p className="font-semibold">{san.owner.name}</p>
+          <p className="text-sm text-gray-600">{san.owner.phone}</p>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
           <div>
             <h1 className="text-4xl font-bold mb-4">{san.ten_san}</h1>
             <p className="text-xl text-gray-600 mb-6">{san.dia_chi}</p>
             <div className="text-3xl font-bold text-success mb-8">
               {Number(san.gia_thue).toLocaleString("vi-VN")}đ / giờ
             </div>
+
 
             {/* Lịch trống */}
             <h2 className="text-2xl font-semibold mb-4">Lịch trống</h2>
@@ -139,11 +159,13 @@ export default function SanDetail() {
                             loading="lazy"
                             className="w-10 h-10 rounded-full object-cover"
                           />
+                          
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
                             {getInitials(dg.ten_nguoi_dung)}
                           </div>
                         )}
+                        
                         <div>
                           <p className="font-semibold">{dg.ten_nguoi_dung}</p>
                           <div className="text-yellow-500">
