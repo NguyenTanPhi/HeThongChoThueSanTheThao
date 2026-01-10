@@ -13,6 +13,8 @@ export default function ChiTietSanOwner({ setActiveTab }) {
   const [trungBinh, setTrungBinh] = useState(0);
   const [tongSo, setTongSo] = useState(0);
   const [lichTrong, setLichTrong] = useState([]);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   const [toast, setToast] = useState(null);
@@ -97,7 +99,38 @@ export default function ChiTietSanOwner({ setActiveTab }) {
               alt={san.ten_san}
               className="w-full h-96 object-cover rounded-2xl shadow-xl"
             />
+            {danhGia.length > 0 ? (
+  <>
+    <ul className="space-y-4">
+      {(showAllReviews ? danhGia : danhGia.slice(0, 3)).map(dg => (
+        <li key={`dg-${dg.id}`} className="p-4 bg-white rounded-lg shadow">
+          <p className="font-semibold">{dg.ten_nguoi_dung}</p>
+
+          <div className="text-yellow-500 mb-1">
+            {"⭐".repeat(dg.diem_danh_gia)}
           </div>
+
+          <p className="text-gray-700">{dg.noi_dung}</p>
+        </li>
+      ))}
+    </ul>
+
+    {danhGia.length > 3 && (
+      <div className="mt-4 text-center">
+        <button
+          className="btn btn-outline btn-sm"
+          onClick={() => setShowAllReviews(!showAllReviews)}
+        >
+          {showAllReviews ? "Thu gọn ▲" : "Xem thêm ▼"}
+        </button>
+      </div>
+    )}
+  </>
+) : (
+  <p className="text-gray-600">Chưa có đánh giá</p>
+)}
+          </div>
+          
 
           <div>
             <h1 className="text-4xl font-bold mb-4">{san.ten_san}</h1>
@@ -166,27 +199,6 @@ export default function ChiTietSanOwner({ setActiveTab }) {
               />
             </div>
 
-            <div className="mt-12">
-              <h2 className="text-2xl font-semibold mb-4">
-                Đánh giá sân ({tongSo} đánh giá, trung bình {trungBinh}⭐)
-              </h2>
-
-              {danhGia.length > 0 ? (
-                <ul className="space-y-4">
-                  {danhGia.map(dg => (
-                    <li key={`dg-${dg.id}`} className="p-4 bg-white rounded-lg shadow">
-                      <p className="font-semibold">{dg.ten_nguoi_dung}</p>
-                      <div className="text-yellow-500">
-                        {"⭐".repeat(dg.diem_danh_gia)}
-                      </div>
-                      <p className="text-gray-700">{dg.noi_dung}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-600">Chưa có đánh giá</p>
-              )}
-            </div>
           </div>
         </div>
       </div>

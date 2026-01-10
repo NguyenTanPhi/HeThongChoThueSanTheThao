@@ -16,6 +16,10 @@ export default function Home() {
     maxPrice: "",
   });
 
+  // ✅ PAGINATION STATE
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,6 +50,19 @@ export default function Home() {
     return matchName && matchAddress && matchMin && matchMax;
   });
 
+  // ✅ RESET PAGE KHI FILTER THAY ĐỔI
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  // ✅ PAGINATION LOGIC
+  const totalPages = Math.ceil(filteredSanList.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentSanList = filteredSanList.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
   return (
     <>
       <Header />
@@ -64,10 +81,16 @@ export default function Home() {
             <a href="#danh-sach-san" className="btn bg-white text-green-700">
               🔍 Tìm sân ngay
             </a>
-            <button onClick={() => navigate("/lich-su-dat")} className="btn btn-warning">
+            <button
+              onClick={() => navigate("/lich-su-dat")}
+              className="btn btn-warning"
+            >
               📖 Lịch sử đặt sân
             </button>
-            <button onClick={() => navigate("/tai-khoan")} className="btn btn-success text-white">
+            <button
+              onClick={() => navigate("/tai-khoan")}
+              className="btn btn-success text-white"
+            >
               👤 Tài khoản
             </button>
           </div>
@@ -75,128 +98,129 @@ export default function Home() {
       </div>
 
       {/* DANH SÁCH */}
-      <div id="danh-sach-san" className="container mx-auto px-5 py-16 bg-gray-50">
-
+      <div
+        id="danh-sach-san"
+        className="container mx-auto px-5 py-16 bg-gray-50"
+      >
         <h2 className="text-4xl font-bold text-center mb-10">
           Các sân bóng nổi bật
         </h2>
 
         {/* FILTER */}
-<div className="bg-white p-6 rounded-3xl shadow-lg mb-10 border border-gray-100">
-  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white p-6 rounded-3xl shadow-lg mb-10 border border-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input
+              placeholder="🔍 Tên sân"
+              className="input input-bordered"
+              value={filters.keyword}
+              onChange={(e) =>
+                setFilters({ ...filters, keyword: e.target.value })
+              }
+            />
 
-    {/* TÊN SÂN */}
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-        🔍
-      </span>
-      <input
-        placeholder="Tên sân"
-        className="input input-bordered w-full pl-10 focus:ring-2 focus:ring-green-500"
-        value={filters.keyword}
-        onChange={(e) =>
-          setFilters({ ...filters, keyword: e.target.value })
-        }
-      />
-    </div>
+            <input
+              placeholder="📍 Địa chỉ"
+              className="input input-bordered"
+              value={filters.dia_chi}
+              onChange={(e) =>
+                setFilters({ ...filters, dia_chi: e.target.value })
+              }
+            />
 
-    {/* ĐỊA CHỈ */}
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-        📍
-      </span>
-      <input
-        placeholder="Khu vực / Địa chỉ"
-        className="input input-bordered w-full pl-10 focus:ring-2 focus:ring-green-500"
-        value={filters.dia_chi}
-        onChange={(e) =>
-          setFilters({ ...filters, dia_chi: e.target.value })
-        }
-      />
-    </div>
+            <input
+              type="number"
+              placeholder="💰 Giá từ"
+              className="input input-bordered"
+              value={filters.minPrice}
+              onChange={(e) =>
+                setFilters({ ...filters, minPrice: e.target.value })
+              }
+            />
 
-    {/* GIÁ TỪ */}
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-        💰
-      </span>
-      <input
-        type="number"
-        placeholder="Giá từ"
-        className="input input-bordered w-full pl-10 focus:ring-2 focus:ring-green-500"
-        value={filters.minPrice}
-        onChange={(e) =>
-          setFilters({ ...filters, minPrice: e.target.value })
-        }
-      />
-    </div>
+            <input
+              type="number"
+              placeholder="💸 Giá đến"
+              className="input input-bordered"
+              value={filters.maxPrice}
+              onChange={(e) =>
+                setFilters({ ...filters, maxPrice: e.target.value })
+              }
+            />
+          </div>
 
-    {/* GIÁ ĐẾN */}
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-        💸
-      </span>
-      <input
-        type="number"
-        placeholder="Giá đến"
-        className="input input-bordered w-full pl-10 focus:ring-2 focus:ring-green-500"
-        value={filters.maxPrice}
-        onChange={(e) =>
-          setFilters({ ...filters, maxPrice: e.target.value })
-        }
-      />
-    </div>
-  </div>
+          <div className="flex justify-between items-center mt-6">
+            <p className="text-sm text-gray-500">
+              🔎 Tìm thấy <b>{filteredSanList.length}</b> sân
+            </p>
 
-  {/* ACTION */}
-  <div className="flex justify-between items-center mt-6">
-    <p className="text-sm text-gray-500">
-      🔎 Tìm thấy <b>{filteredSanList.length}</b> sân phù hợp
-    </p>
-
-    <button
-      className="btn btn-outline btn-sm hover:bg-green-50"
-      onClick={() =>
-        setFilters({
-          keyword: "",
-          dia_chi: "",
-          minPrice: "",
-          maxPrice: "",
-        })
-      }
-    >
-      🔄 Xóa bộ lọc
-    </button>
-  </div>
-</div>
-
-
-        {/* TAG ĐANG LỌC */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {filters.keyword && <span className="badge">Tên: {filters.keyword}</span>}
-          {filters.dia_chi && <span className="badge">Địa chỉ: {filters.dia_chi}</span>}
-          {filters.minPrice && <span className="badge">
-            Giá từ: {Number(filters.minPrice).toLocaleString()}đ
-          </span>}
-          {filters.maxPrice && <span className="badge">
-            Giá đến: {Number(filters.maxPrice).toLocaleString()}đ
-          </span>}
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() =>
+                setFilters({
+                  keyword: "",
+                  dia_chi: "",
+                  minPrice: "",
+                  maxPrice: "",
+                })
+              }
+            >
+              🔄 Xóa bộ lọc
+            </button>
+          </div>
         </div>
 
+        {/* DANH SÁCH SÂN */}
         {loading ? (
           <div className="flex justify-center py-20">
             <span className="loading loading-spinner loading-lg"></span>
           </div>
-        ) : filteredSanList.length === 0 ? (
+        ) : currentSanList.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
             Không tìm thấy sân phù hợp
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {filteredSanList.map((san) => (
-              <SanCard key={san.id} san={san} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {currentSanList.map((san) => (
+                <SanCard key={san.id} san={san} />
+              ))}
+            </div>
+
+            {/* PAGINATION */}
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2 mt-12">
+                <button
+                  className="btn btn-sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  ⬅ Trước
+                </button>
+
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`btn btn-sm ${
+                      currentPage === i + 1
+                        ? "btn-success text-white"
+                        : "btn-outline"
+                    }`}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button
+                  className="btn btn-sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  Sau ➡
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </>

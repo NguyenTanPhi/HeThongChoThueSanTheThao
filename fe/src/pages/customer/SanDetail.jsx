@@ -19,7 +19,9 @@ export default function SanDetail() {
   const [loading, setLoading] = useState(true);
   const [selectedLich, setSelectedLich] = useState(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const navigate = useNavigate();
+
 
   useEffect(() => {
     setLoading(true);
@@ -140,45 +142,61 @@ export default function SanDetail() {
             )}
 
             {/* Đánh giá */}
-            {danhGia && (
-              <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-2">
-                  Đánh giá trung bình: {danhGia.trung_binh} ⭐
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  Tổng số đánh giá: {danhGia.tong_so}
-                </p>
-                <ul className="space-y-4">
-                  {danhGia.danh_gia.map((dg) => (
-                    <li key={dg.id} className="p-4 bg-white rounded-lg shadow">
-                      <div className="flex items-center gap-3 mb-2">
-                        {dg.avatar ? (
-                          <img
-                            src={`http://localhost:8000/storage/${dg.avatar}`}
-                            alt={dg.ten_nguoi_dung}
-                            loading="lazy"
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
-                            {getInitials(dg.ten_nguoi_dung)}
-                          </div>
-                        )}
-                        
-                        <div>
-                          <p className="font-semibold">{dg.ten_nguoi_dung}</p>
-                          <div className="text-yellow-500">
-                            {"⭐".repeat(dg.diem_danh_gia)}
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-gray-700">{dg.noi_dung}</p>
-                    </li>
-                  ))}
-                </ul>
+{danhGia && (
+  <div className="mt-8">
+    <h2 className="text-2xl font-semibold mb-2">
+      Đánh giá trung bình: {danhGia.trung_binh} ⭐
+    </h2>
+    <p className="text-gray-600 mb-4">
+      Tổng số đánh giá: {danhGia.tong_so}
+    </p>
+
+    <ul className="space-y-4">
+      {(showAllReviews
+        ? danhGia.danh_gia
+        : danhGia.danh_gia.slice(0, 3)
+      ).map((dg) => (
+        <li key={dg.id} className="p-4 bg-white rounded-lg shadow">
+          <div className="flex items-center gap-3 mb-2">
+            {dg.avatar ? (
+              <img
+                src={`http://localhost:8000/storage/${dg.avatar}`}
+                alt={dg.ten_nguoi_dung}
+                loading="lazy"
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+                {getInitials(dg.ten_nguoi_dung)}
               </div>
             )}
+
+            <div>
+              <p className="font-semibold">{dg.ten_nguoi_dung}</p>
+              <div className="text-yellow-500">
+                {"⭐".repeat(dg.diem_danh_gia)}
+              </div>
+            </div>
+          </div>
+          <p className="text-gray-700">{dg.noi_dung}</p>
+        </li>
+      ))}
+    </ul>
+
+    {/* NÚT XEM THÊM */}
+    {danhGia.danh_gia.length > 3 && (
+      <div className="mt-4 text-center">
+        <button
+          className="btn btn-outline btn-sm"
+          onClick={() => setShowAllReviews(!showAllReviews)}
+        >
+          {showAllReviews ? "Thu gọn ▲" : "Xem thêm ▼"}
+        </button>
+      </div>
+    )}
+  </div>
+)}
+
           </div>
         </div>
       </div>
