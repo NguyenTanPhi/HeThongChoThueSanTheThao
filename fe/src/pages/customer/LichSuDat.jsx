@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+
 export default function LichSuDat() {
   const [lichSu, setLichSu] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,6 +12,7 @@ export default function LichSuDat() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const navigate = useNavigate();
+  
 
   /* ===================== UTIL ===================== */
   const isMatchFinished = (ngayDat, gioKetThuc) => {

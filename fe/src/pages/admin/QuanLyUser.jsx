@@ -10,6 +10,8 @@ export default function QuanLyUser() {
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
+  const [viewUser, setViewUser] = useState(null);
+
 
   useEffect(() => {
     fetchUsers();
@@ -138,28 +140,40 @@ export default function QuanLyUser() {
                         )}
                       </td>
                       <td className="text-center">
-                        {u.role === "admin" ? (
-                          <span className="text-gray-400 italic">Không thao tác</span>
-                        ) : (
-                          <button
-                            className={`px-4 py-2 rounded-xl text-white font-medium transition min-w-[100px] ${
-                              u.status === "active"
-                                ? "bg-red-600 hover:bg-red-700"
-                                : "bg-green-600 hover:bg-green-700"
-                            }`}
-                            onClick={() => setSelectedUser(u)}
-                            disabled={!!actionLoading[u.id]}
-                          >
-                            {actionLoading[u.id] ? (
-                              <span className="loading loading-spinner loading-sm"></span>
-                            ) : u.status === "active" ? (
-                              "Khóa"
-                            ) : (
-                              "Mở khóa"
-                            )}
-                          </button>
-                        )}
-                      </td>
+  {u.role === "admin" ? (
+    <span className="text-gray-400 italic">Không thao tác</span>
+  ) : (
+    <div className="flex justify-center gap-2">
+      {/* Nút xem */}
+      <button
+        className="px-3 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition"
+        onClick={() => setViewUser(u)}
+      >
+        👁 Xem
+      </button>
+
+      {/* Nút khóa / mở */}
+      <button
+        className={`px-3 py-2 rounded-xl text-white font-medium transition min-w-[90px] ${
+          u.status === "active"
+            ? "bg-red-600 hover:bg-red-700"
+            : "bg-green-600 hover:bg-green-700"
+        }`}
+        onClick={() => setSelectedUser(u)}
+        disabled={!!actionLoading[u.id]}
+      >
+        {actionLoading[u.id] ? (
+          <span className="loading loading-spinner loading-sm"></span>
+        ) : u.status === "active" ? (
+          "Khóa"
+        ) : (
+          "Mở"
+        )}
+      </button>
+    </div>
+  )}
+</td>
+
                     </tr>
                   ))
                 )}
@@ -240,6 +254,43 @@ export default function QuanLyUser() {
           </div>
         </div>
       )}
+      {/* Modal xem thông tin user */}
+{viewUser && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg animate-fadeIn">
+      <h3 className="text-2xl font-bold mb-4 text-gray-900">
+        👤 Thông tin người dùng
+      </h3>
+
+      <div className="space-y-3 text-gray-700">
+        <InfoRow label="Họ tên" value={viewUser.name} />
+        <InfoRow label="Email" value={viewUser.email} />
+        <InfoRow label="Số điện thoại" value={viewUser.phone || "Chưa cập nhật"} />
+        <InfoRow label="Vai trò" value={viewUser.role} />
+        <InfoRow
+          label="Trạng thái"
+          value={
+            viewUser.status === "active" ? "Hoạt động" : "Đã khóa"
+          }
+        />
+        <InfoRow
+          label="Ngày tạo"
+          value={viewUser.created_at || "Không rõ"}
+        />
+      </div>
+
+      <div className="flex justify-end mt-6">
+        <button
+          className="px-5 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 transition"
+          onClick={() => setViewUser(null)}
+        >
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
@@ -298,4 +349,12 @@ function ToastContainer() {
 
 function showToast(msg, type) {
   window.toast.show(msg, type);
+}
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex justify-between border-b pb-2">
+      <span className="font-medium text-gray-600">{label}</span>
+      <span className="font-semibold text-gray-900">{value}</span>
+    </div>
+  );
 }

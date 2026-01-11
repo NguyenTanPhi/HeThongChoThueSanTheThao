@@ -8,34 +8,37 @@ use Illuminate\Support\Facades\DB;
 class AdminReportController extends Controller
 {
     public function baoCaoDatSan(Request $request)
-    {
-        $query = DB::table('dat_san')
-            ->join('san', 'dat_san.san_id', '=', 'san.id')
-            ->join('nguoi_dung', 'dat_san.user_id', '=', 'nguoi_dung.id')
-            ->leftJoin('thanh_toan', 'dat_san.id', '=', 'thanh_toan.dat_san_id')
-            ->where('dat_san.trang_thai', 'da_thanh_toan')
-            ->select(
-                'dat_san.id as dat_san_id',
-                'san.ten_san',
-                'nguoi_dung.name as nguoi_dat',
-                'dat_san.ngay_dat',
-                'dat_san.gio_bat_dau',
-                'dat_san.gio_ket_thuc',
-                'dat_san.tong_gia as so_tien'
-            );
+{
+    $query = DB::table('dat_san')
+        ->join('san', 'dat_san.san_id', '=', 'san.id')
+        ->join('nguoi_dung', 'dat_san.user_id', '=', 'nguoi_dung.id')
+        ->leftJoin('thanh_toan', 'dat_san.id', '=', 'thanh_toan.dat_san_id')
+        ->where('dat_san.trang_thai', 'da_thanh_toan')
+        ->select(
+            'dat_san.id as dat_san_id',
+            'san.ten_san',
+            'nguoi_dung.name as nguoi_dat',
+            'dat_san.ngay_dat',
+            'dat_san.gio_bat_dau',
+            'dat_san.gio_ket_thuc',
+            'dat_san.tong_gia as so_tien'
+        );
 
-        //Bộ lọc theo thời gian
-        if ($request->filled('from')) {
-            $query->whereDate('dat_san.ngay_dat', '>=', $request->from);
-        }
-        if ($request->filled('to')) {
-            $query->whereDate('dat_san.ngay_dat', '<=', $request->to);
-        }
-
-        $data = $query->orderBy('dat_san.id', 'DESC')->get();
-
-        return response()->json($data);
+    // BỘ LỌC THỜI GIAN
+    if ($request->filled('from') && $request->filled('to')) {
+        $query->whereBetween('dat_san.ngay_dat', [$request->from, $request->to]);
+    } elseif ($request->filled('month') && $request->filled('year')) {
+        $query->whereMonth('dat_san.ngay_dat', $request->month)
+              ->whereYear('dat_san.ngay_dat', $request->year);
+    } elseif ($request->filled('year')) {
+        $query->whereYear('dat_san.ngay_dat', $request->year);
     }
+
+    return response()->json(
+        $query->orderBy('dat_san.id', 'DESC')->get()
+    );
+}
+
 
     public function baoCaoGoiDichVu(Request $request)
 {
@@ -48,21 +51,24 @@ class AdminReportController extends Controller
             'nguoi_dung.name as nguoi_dung',
             'goidamua.ngay_mua',
             'goidamua.ngay_het',
-            'goidamua.gia' // ⭐ QUAN TRỌNG
+            'goidamua.gia'
         );
 
-    // Bộ lọc theo ngày mua gói
-    if ($request->filled('from')) {
-        $query->whereDate('goidamua.ngay_mua', '>=', $request->from);
-    }
-    if ($request->filled('to')) {
-        $query->whereDate('goidamua.ngay_mua', '<=', $request->to);
+    // BỘ LỌC THỜI GIAN
+    if ($request->filled('from') && $request->filled('to')) {
+        $query->whereBetween('goidamua.ngay_mua', [$request->from, $request->to]);
+    } elseif ($request->filled('month') && $request->filled('year')) {
+        $query->whereMonth('goidamua.ngay_mua', $request->month)
+              ->whereYear('goidamua.ngay_mua', $request->year);
+    } elseif ($request->filled('year')) {
+        $query->whereYear('goidamua.ngay_mua', $request->year);
     }
 
     return response()->json(
         $query->orderBy('goidamua.id', 'DESC')->get()
     );
 }
+
 
 
     //Thống kê

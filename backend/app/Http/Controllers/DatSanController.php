@@ -267,7 +267,6 @@ class DatSanController extends Controller
             $q->where('owner_id', $ownerId);
         });
 
-    // ✅ SỬA Ở ĐÂY
     if ($request->ngay) {
         $query->whereDate('ngay_dat', $request->ngay);
     }

@@ -16,7 +16,7 @@ export default function About() {
 
         <p className="mb-4 text-lg">
           Đây là đề tài thuộc luận văn tốt nghiệp, được phát triển bằng 
-          <span className="font-semibold"> ReactJS, PHP và MySQL</span>, 
+          <span className="font-semibold"> ReactJS, Lavarel và MySQL</span>, 
           kết hợp giao diện hiện đại, thân thiện với người dùng.
         </p>
 
