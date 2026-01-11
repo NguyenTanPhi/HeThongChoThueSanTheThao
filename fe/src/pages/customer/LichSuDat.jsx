@@ -12,6 +12,8 @@ export default function LichSuDat() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const navigate = useNavigate();
+  const [visibleCount, setVisibleCount] = useState(3);
+
   
 
   /* ===================== UTIL ===================== */
@@ -64,7 +66,13 @@ export default function LichSuDat() {
       try {
         const res = await axiosPrivate.get("/customer/dat-san");
         const data = res?.data?.data ?? [];
-        setLichSu(Array.isArray(data) ? data : []);
+       const sortedData = [...data].sort((a, b) => {
+  const timeA = new Date(`${a.ngay_dat}T${a.gio_bat_dau}`);
+  const timeB = new Date(`${b.ngay_dat}T${b.gio_bat_dau}`);
+  return timeB - timeA;
+});
+
+setLichSu(Array.isArray(sortedData) ? sortedData : []);
       } catch {
         toast.error("❌ Bạn cần đăng nhập để truy cập");
         navigate("/");
@@ -124,7 +132,7 @@ export default function LichSuDat() {
 
       {lichSu.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {lichSu.map((item) => {
+         {lichSu.slice(0, visibleCount).map((item) => {
             const daDanhGia =
               item?.da_danh_gia === true ||
               (Array.isArray(item?.danh_gia) &&
@@ -200,6 +208,28 @@ export default function LichSuDat() {
           Chưa có lịch sử đặt sân.
         </p>
       )}
+      {/* Xem thêm / Thu gọn */}
+{lichSu.length > 3 && (
+  <div className="flex justify-center mt-8 gap-4">
+    {visibleCount < lichSu.length ? (
+      <button
+        className="btn btn-outline btn-success"
+        onClick={() => setVisibleCount((prev) => prev + 3)}
+      >
+        👀 Xem thêm
+      </button>
+    ) : (
+      <button
+        className="btn btn-outline btn-secondary"
+        onClick={() => setVisibleCount(3)}
+      >
+        🔼 Thu gọn
+      </button>
+    )}
+  </div>
+)}
+
+
 
       <div className="text-center mt-10">
         <button

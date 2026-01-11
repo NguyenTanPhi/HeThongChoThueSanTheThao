@@ -5,12 +5,22 @@ import { axiosPrivate } from "../../api/instance";
 export default function DonDatSan() {
   const [donList, setDonList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(3);
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await axiosPrivate.get("/owner/lich-su-dat");
-        setDonList(res.data || []);
+        const data = res.data || [];
+
+// 🔽 Mới nhất lên đầu theo thời gian tạo
+const sortedData = [...data].sort(
+  (a, b) => new Date(b.created_at) - new Date(a.created_at)
+);
+
+setDonList(sortedData);
+
       } catch (err) {
         console.error("Lỗi khi lấy đơn đặt sân:", err);
       } finally {
@@ -91,7 +101,7 @@ export default function DonDatSan() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
-            {donList.map((don) => {
+           {donList.slice(0, visibleCount).map((don) => {
               const status = getTrangThai(don);
 
               return (
@@ -152,6 +162,27 @@ export default function DonDatSan() {
             })}
           </div>
         )}
+        {/* Xem thêm / Thu gọn */}
+{donList.length > 3 && (
+  <div className="flex justify-center mt-10 gap-4">
+    {visibleCount < donList.length ? (
+      <button
+        className="btn btn-outline btn-primary"
+        onClick={() => setVisibleCount((prev) => prev + 3)}
+      >
+        👀 Xem thêm
+      </button>
+    ) : (
+      <button
+        className="btn btn-outline btn-secondary"
+        onClick={() => setVisibleCount(3)}
+      >
+        🔼 Thu gọn
+      </button>
+    )}
+  </div>
+)}
+
       </div>
     </div>
   );

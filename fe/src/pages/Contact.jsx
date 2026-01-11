@@ -13,7 +13,7 @@ export default function Contact() {
         <div className="space-y-5 text-lg">
           <p>
             📧 Email hỗ trợ:  
-            <span className="font-semibold"> nq2018.nguyentanphi311@gmail.com</span>
+            <span className="font-semibold"> dh52111486@student.stu.edu.vn</span>
           </p>
 
           <p>
@@ -38,7 +38,7 @@ export default function Contact() {
         <div className="flex flex-col gap-3 mt-6">
 
   <a
-    href="https://www.facebook.com/100047621590048"
+    href="https://www.facebook.com/phi.796171/"
     target="_blank"
     rel="noopener noreferrer"
     className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm transition text-base w-max"

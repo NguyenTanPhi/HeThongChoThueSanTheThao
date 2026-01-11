@@ -8,6 +8,8 @@ export default function QuanLySan({ setActiveTab }) {
   const [loading, setLoading] = useState(true); // Trạng thái loading
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(3);
+
 
   const [newSan, setNewSan] = useState({
     ten_san: "",
@@ -194,7 +196,7 @@ export default function QuanLySan({ setActiveTab }) {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
-            {sanList.map((san) => (
+            {sanList.slice(0, visibleCount).map((san) => (
               <div
                 key={san.id}
                 className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-2xl transition-all cursor-pointer overflow-hidden"
@@ -277,7 +279,7 @@ export default function QuanLySan({ setActiveTab }) {
                           Hủy
                         </button>
                         <button
-                          className="btn btn-error"
+                          className="btn btn-error" 
                           onClick={() => {
                             handleDeleteSan(san.id);
                             setDeleteSanId(null);
@@ -289,10 +291,34 @@ export default function QuanLySan({ setActiveTab }) {
                     </div>
                   </div>
                 )}
+                
               </div>
+              
             ))}
           </div>
         )}
+        {/* Xem thêm / Thu gọn */}
+{sanList.length > 3 && (
+  <div className="flex justify-center mt-8 gap-4">
+    {visibleCount < sanList.length ? (
+      <button
+        className="btn btn-outline btn-success"
+        onClick={() => setVisibleCount((prev) => prev + 3)}
+      >
+        👀 Xem thêm
+      </button>
+    ) : (
+      <button
+        className="btn btn-outline btn-secondary"
+        onClick={() => setVisibleCount(3)}
+      >
+        🔼 Thu gọn
+      </button>
+    )}
+  </div>
+)}
+
+
 
         {/* Modal đăng ký sân mới */}
         {isAddModalOpen && (
@@ -324,6 +350,8 @@ export default function QuanLySan({ setActiveTab }) {
                   <option>Sân Pickleball</option>
                   <option>Sân Tenis</option>
                   <option>Sân Bóng rổ</option>
+<option>Sân Bóng chuyền</option>
+<option>Sân Futsal</option>
                 </select>
                 <input
                   type="number"

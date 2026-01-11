@@ -5,6 +5,8 @@ import { axiosPrivate } from "../../api/instance";
 export default function ThongBaoOwner() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(3);
+
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -55,7 +57,7 @@ export default function ThongBaoOwner() {
         </div>
       ) : (
         <ul className="space-y-4">
-          {notifications.map((tb) => (
+          {notifications.slice(0, visibleCount).map((tb) => (
             <li
               key={tb.id}
               className={`p-4 rounded-xl border transition-shadow flex justify-between items-start
@@ -86,6 +88,27 @@ export default function ThongBaoOwner() {
           ))}
         </ul>
       )}
+      {/* Xem thêm / Thu gọn */}
+{notifications.length > 3 && (
+  <div className="flex justify-center mt-6 gap-4">
+    {visibleCount < notifications.length ? (
+      <button
+        className="btn btn-outline btn-primary"
+        onClick={() => setVisibleCount((prev) => prev + 3)}
+      >
+        👀 Xem thêm
+      </button>
+    ) : (
+      <button
+        className="btn btn-outline btn-secondary"
+        onClick={() => setVisibleCount(3)}
+      >
+        🔼 Thu gọn
+      </button>
+    )}
+  </div>
+)}
+
     </div>
   );
 }

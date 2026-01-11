@@ -211,12 +211,26 @@ export default function BaoCao() {
               ])}
           />
 
-          {datSan.length > pageDatSan * LIMIT && (
-            <button className="btn btn-outline"
-              onClick={() => setPageDatSan(pageDatSan + 1)}>
-              Xem thêm đặt sân
-            </button>
-          )}
+          <div className="flex gap-3 mt-3">
+  {datSan.length > pageDatSan * LIMIT && (
+    <button
+      className="btn btn-outline"
+      onClick={() => setPageDatSan(pageDatSan + 1)}
+    >
+      👀 Xem thêm đặt sân
+    </button>
+  )}
+
+  {pageDatSan > 1 && (
+    <button
+      className="btn btn-ghost"
+      onClick={() => setPageDatSan(1)}
+    >
+      🔽 Rút gọn
+    </button>
+  )}
+</div>
+
 
           {/* ===== GOI DICH VU ===== */}
           <ReportTable
@@ -233,12 +247,26 @@ export default function BaoCao() {
               ])}
           />
 
-          {goiDichVu.length > pageGoi * LIMIT && (
-            <button className="btn btn-outline"
-              onClick={() => setPageGoi(pageGoi + 1)}>
-              Xem thêm gói dịch vụ
-            </button>
-          )}
+          <div className="flex gap-3 mt-3">
+  {goiDichVu.length > pageGoi * LIMIT && (
+    <button
+      className="btn btn-outline"
+      onClick={() => setPageGoi(pageGoi + 1)}
+    >
+      👀 Xem thêm gói dịch vụ
+    </button>
+  )}
+
+  {pageGoi > 1 && (
+    <button
+      className="btn btn-ghost"
+      onClick={() => setPageGoi(1)}
+    >
+      🔽 Rút gọn
+    </button>
+  )}
+</div>
+
         </div>
       )}
 

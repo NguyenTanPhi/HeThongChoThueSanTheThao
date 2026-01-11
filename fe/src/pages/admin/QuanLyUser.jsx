@@ -11,11 +11,21 @@ export default function QuanLyUser() {
   const [meta, setMeta] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
   const [viewUser, setViewUser] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
+
 
 
   useEffect(() => {
     fetchUsers();
   }, [page, search]);
+  useEffect(() => {
+  const delay = setTimeout(() => {
+    setSearch(searchInput);
+  }, 400); // 400ms là đẹp
+
+  return () => clearTimeout(delay);
+}, [searchInput]);
+
 
   const fetchUsers = async () => {
     try {
@@ -77,16 +87,15 @@ export default function QuanLyUser() {
       {/* Search */}
       <div className="relative mb-6">
         <input
-          type="text"
-          placeholder="🔍 Tìm kiếm theo tên, email, số điện thoại..."
-          className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          disabled={loading}
-        />
+  type="text"
+  placeholder="🔍 Tìm kiếm theo tên, email, số điện thoại..."
+  className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition"
+  value={searchInput}
+  onChange={(e) => {
+    setSearchInput(e.target.value);
+    setPage(1);
+  }}
+/>
       </div>
 
       {/* Table */}

@@ -102,7 +102,19 @@ export default function SanDetail() {
 
           <div>
             <h1 className="text-4xl font-bold mb-4">{san.ten_san}</h1>
-            <p className="text-xl text-gray-600 mb-6">{san.dia_chi}</p>
+            <p
+  className="text-xl text-blue-600 mb-6 cursor-pointer hover:underline flex items-center gap-2"
+  title="Nhấn để chỉ đường từ vị trí hiện tại"
+  onClick={() => {
+    const mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+      san.dia_chi
+    )}&travelmode=driving`;
+    window.open(mapUrl, "_blank");
+  }}
+>
+  📍 {san.dia_chi}
+</p>
+
             <div className="text-3xl font-bold text-success mb-8">
               {Number(san.gia_thue).toLocaleString("vi-VN")}đ / giờ
             </div>

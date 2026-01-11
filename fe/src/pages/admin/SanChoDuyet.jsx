@@ -9,6 +9,8 @@ export default function SanChoDuyet() {
   const [rejectId, setRejectId] = useState(null);
   const [reason, setReason] = useState("");
   const [actionLoading, setActionLoading] = useState({}); // Loading cho từng hành động (duyệt/từ chối)
+  const [visibleCount, setVisibleCount] = useState(3);
+
 
   useEffect(() => {
     const fetchSanChoDuyet = async () => {
@@ -99,7 +101,7 @@ export default function SanChoDuyet() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {sanList.map((san) => (
+          {sanList.slice(0, visibleCount).map((san) => (
             <div
               key={san.id}
               className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 transition-all hover:shadow-2xl hover:-translate-y-1"
@@ -160,6 +162,27 @@ export default function SanChoDuyet() {
           ))}
         </div>
       )}
+      {/* Xem thêm / Thu gọn */}
+{sanList.length > 3 && (
+  <div className="flex justify-center mt-10 gap-4">
+    {visibleCount < sanList.length ? (
+      <button
+        className="px-6 py-2 rounded-xl border border-blue-500 text-blue-600 hover:bg-blue-50 transition font-medium"
+        onClick={() => setVisibleCount((prev) => prev + 3)}
+      >
+        👀 Xem thêm
+      </button>
+    ) : (
+      <button
+        className="px-6 py-2 rounded-xl border border-gray-400 text-gray-600 hover:bg-gray-100 transition font-medium"
+        onClick={() => setVisibleCount(3)}
+      >
+        🔼 Thu gọn
+      </button>
+    )}
+  </div>
+)}
+
 
       {/* Modal chi tiết sân */}
       {detailSan && (

@@ -10,6 +10,8 @@ export default function GoiDichVu() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(5);
+
 
   const [form, setForm] = useState({
     ten_goi: "",
@@ -163,7 +165,7 @@ export default function GoiDichVu() {
                   </td>
                 </tr>
               ) : (
-                packages.map((g) => (
+              packages.slice(0, visibleCount).map((g) => (
                   <tr key={g.id} className="hover:bg-gray-50 transition">
                     <td className="font-medium">{g.ten_goi}</td>
                     <td>{Number(g.gia).toLocaleString()}đ</td>
@@ -216,6 +218,27 @@ export default function GoiDichVu() {
           </table>
         </div>
       )}
+      {/* Xem thêm / Thu gọn */}
+{packages.length > 5 && (
+  <div className="flex justify-center mt-8 gap-4">
+    {visibleCount < packages.length ? (
+      <button
+        className="px-6 py-2 rounded-xl border border-blue-500 text-blue-600 hover:bg-blue-50 transition font-medium"
+        onClick={() => setVisibleCount((prev) => prev + 5)}
+      >
+        👀 Xem thêm
+      </button>
+    ) : (
+      <button
+        className="px-6 py-2 rounded-xl border border-gray-400 text-gray-600 hover:bg-gray-100 transition font-medium"
+        onClick={() => setVisibleCount(5)}
+      >
+        🔼 Thu gọn
+      </button>
+    )}
+  </div>
+)}
+
 
       {/* Modal thêm */}
       {isAddOpen && (

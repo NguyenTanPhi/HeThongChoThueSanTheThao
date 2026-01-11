@@ -3,6 +3,16 @@ import { getSanList } from "../../api/san.js";
 import SanCard from "../../components/SanCard.jsx";
 import Header from "../../components/Header";
 import { useNavigate } from "react-router-dom";
+function normalizeAddress(text = "") {
+  return text
+    .toLowerCase()
+    .normalize("NFD")                // bỏ dấu
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/tp\.?|thanh pho/g, "")
+    .replace(/quan|q\.?|huyen|h\.?/g, "")
+    .replace(/,/g, "")
+    .trim();
+}
 
 export default function Home() {
   const [sanList, setSanList] = useState([]);
@@ -37,9 +47,9 @@ export default function Home() {
       .toLowerCase()
       .includes(filters.keyword.toLowerCase());
 
-    const matchAddress = san.dia_chi
-      .toLowerCase()
-      .includes(filters.dia_chi.toLowerCase());
+    const matchAddress = normalizeAddress(san.dia_chi).includes(
+  normalizeAddress(filters.dia_chi)
+);
 
     const matchMin =
       !filters.minPrice || san.gia_thue >= Number(filters.minPrice);
@@ -147,6 +157,28 @@ export default function Home() {
               }
             />
           </div>
+          {/* QUICK FILTER KHU VỰC */}
+<div className="flex flex-wrap gap-2 mt-4">
+  <span className="text-sm text-gray-500 mr-2">
+    📍 Gần bạn:
+  </span>
+
+  {["Quận 7", "Gò Vấp", "Thủ Đức", "Quận 1"].map((area) => (
+    <button
+      key={area}
+      className="btn btn-xs btn-outline"
+      onClick={() =>
+        setFilters((prev) => ({
+          ...prev,
+          dia_chi: area,
+        }))
+      }
+    >
+      {area}
+    </button>
+  ))}
+</div>
+
 
           <div className="flex justify-between items-center mt-6">
             <p className="text-sm text-gray-500">
