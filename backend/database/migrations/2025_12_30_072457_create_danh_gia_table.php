@@ -14,6 +14,7 @@ class CreateDanhGiaTable extends Migration
     public function up()
     {
         Schema::create('danh_gia', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->onDelete('cascade');
             $table->foreignId('san_id')->constrained('san')->onDelete('cascade');

@@ -14,6 +14,7 @@ class AddDaHoanThanhToDatSanTable extends Migration
     public function up()
     {
         Schema::table('dat_san', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->boolean('da_hoan_thanh')
               ->default(false)
               ->after('trang_thai');

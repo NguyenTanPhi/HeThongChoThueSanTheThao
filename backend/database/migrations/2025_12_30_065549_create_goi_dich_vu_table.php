@@ -14,6 +14,7 @@ class CreateGoiDichVuTable extends Migration
     public function up()
     {
         Schema::create('goidichvu', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->string('ten_goi');
             $table->text('mo_ta');

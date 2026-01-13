@@ -14,6 +14,7 @@ class CreateLichSanTable extends Migration
     public function up()
     {
         Schema::create('lich_san', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('san_id')->constrained('san')->onDelete('cascade');
             $table->foreignId('nguoi_dat_id')

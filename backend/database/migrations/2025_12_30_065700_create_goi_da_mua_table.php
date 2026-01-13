@@ -14,6 +14,7 @@ class CreateGoiDaMuaTable extends Migration
     public function up()
     {
         Schema::create('goidamua', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->onDelete('restrict')->onUpdate('cascade');
             $table->foreignId('goi_id')->constrained('goidichvu')->onDelete('restrict')->onUpdate('cascade');

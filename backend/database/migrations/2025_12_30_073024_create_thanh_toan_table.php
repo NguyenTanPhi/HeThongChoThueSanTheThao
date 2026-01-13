@@ -14,6 +14,7 @@ class CreateThanhToanTable extends Migration
     public function up()
     {
         Schema::create('thanh_toan', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('dat_san_id')->constrained('dat_san')->onDelete('cascade');
             $table->string('ma_giao_dich')->nullable();

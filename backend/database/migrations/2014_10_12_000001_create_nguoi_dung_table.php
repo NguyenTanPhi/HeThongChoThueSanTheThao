@@ -14,6 +14,7 @@ class CreateNguoiDungTable extends Migration
     public function up()
     {
         Schema::create('nguoi_dung', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
               $table->id();
             $table->string('name');
             $table->string('email')->unique();

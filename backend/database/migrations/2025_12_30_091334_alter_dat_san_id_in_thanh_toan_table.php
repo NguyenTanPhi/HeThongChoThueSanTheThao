@@ -15,6 +15,7 @@ class AlterDatSanIdInThanhToanTable extends Migration
     public function up()
     {
         Schema::table('thanh_toan', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             DB::statement('
             ALTER TABLE thanh_toan
             DROP FOREIGN KEY thanh_toan_dat_san_id_foreign

@@ -10,6 +10,7 @@ export default function ThanhToan() {
   const [lichId, setLichId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("vnpay"); // mặc định vnpay
 
   // lấy thông tin lịch từ query string để hiển thị
   useEffect(() => {
@@ -37,10 +38,11 @@ export default function ThanhToan() {
     try {
       const res = await axiosPrivate.post("/customer/dat-san-thanh-toan", {
         lich_id: lichId,
+        payment_method: paymentMethod, // gửi đúng method
       });
 
       const { payment_url } = res.data;
-      if (!payment_url) throw new Error("Không tạo được link VNPay");
+      if (!payment_url) throw new Error("Không tạo được link thanh toán");
 
       window.location.href = payment_url;
     } catch (err) {
@@ -55,12 +57,38 @@ export default function ThanhToan() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
-        <h1 className="text-2xl font-bold mb-6">Thanh toán VNPay</h1>
+        <h1 className="text-2xl font-bold mb-6">Thanh toán đặt sân</h1>
         <p className="mb-4">
           <b>Ngày:</b> {lich.ngay}<br />
           <b>Giờ:</b> {lich.gio_bat_dau} - {lich.gio_ket_thuc}<br />
           <b>Giá:</b> {Number(lich.gia).toLocaleString("vi-VN")}đ
         </p>
+
+        <div className="mb-4 text-left">
+          <label className="font-semibold mb-2 block">Chọn phương thức thanh toán:</label>
+          <div className="flex gap-4">
+            <label>
+              <input
+                type="radio"
+                name="payment_method"
+                value="vnpay"
+                checked={paymentMethod === "vnpay"}
+                onChange={() => setPaymentMethod("vnpay")}
+              />{" "}
+              VNPay
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="payment_method"
+                value="zalo"
+                checked={paymentMethod === "zalo"}
+                onChange={() => setPaymentMethod("zalo")}
+              />{" "}
+              ZaloPay
+            </label>
+          </div>
+        </div>
 
         {error && <div className="alert alert-error mb-4">{error}</div>}
 

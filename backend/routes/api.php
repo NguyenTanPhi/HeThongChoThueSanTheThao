@@ -28,7 +28,10 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('/vnpay_return', [OwnerController::class, 'vnpayReturn']);
 Route::get('/customer/vnpay_return', [DatSanController::class, 'vnpayReturnDatSan']);
 
+// Route ZaloPay return
 
+//Route::get('/zalo_return', [DatSanController::class, 'zaloRedirectReturn']);
+Route::get('/zalo_return', [DatSanController::class, 'zaloReturnDatSan']);
 
 // Protected routes
 Route::get('/san', [SanController::class, 'index']);

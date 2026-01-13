@@ -14,6 +14,7 @@ class CreateDatSanTable extends Migration
     public function up()
     {
         Schema::create('dat_san', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('san_id')->constrained('san')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('nguoi_dung')->onDelete('cascade');

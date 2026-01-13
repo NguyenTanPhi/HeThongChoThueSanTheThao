@@ -31,6 +31,7 @@ import SanChoDuyet from "./pages/admin/SanChoDuyet.jsx";
 import BaoCao from "./pages/admin/BaoCao.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword";
+import ZaloPayReturn from "./pages/customer/ZaloPayReturn.jsx";
 
 // Layout cho khách hàng: có header + footer
 function CustomerLayout() {
@@ -65,6 +66,7 @@ function App() {
         <Route path="/san/:id" element={<SanDetail />} />
         <Route path="/thanh-toan" element={<ThanhToan />} />
         <Route path="/vnpay-return" element={<VnpayReturn />} />
+        <Route path="/zalo_return" element={<ZaloPayReturn />} />
         <Route path="/lich-su-dat" element={<LichSuDat />} />
         <Route path="/tai-khoan" element={<TaiKhoan />} />
         <Route path="/about" element={<About />} />

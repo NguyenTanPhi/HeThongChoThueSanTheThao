@@ -14,6 +14,7 @@ class CreateSanTable extends Migration
     public function up()
     {
         Schema::create('san', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->foreignId('owner_id')->constrained('nguoi_dung')->onDelete('cascade');
             $table->string('ten_san');

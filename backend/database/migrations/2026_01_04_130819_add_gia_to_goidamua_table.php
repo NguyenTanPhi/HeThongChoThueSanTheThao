@@ -14,6 +14,7 @@ class AddGiaToGoidamuaTable extends Migration
     public function up()
     {
         Schema::table('goidamua', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->bigInteger('gia')->after('goi_id');
         });
     }
