@@ -62,30 +62,53 @@ export default function GoiDichVu() {
 
   const muaGoi = (goiId, tenGoi, gia) => setModalData({ goiId, tenGoi, gia });
 
-  const confirmMuaGoi = async () => {
-    if (!modalData) return;
-    try {
-      const res = await axiosPrivate.post("/owner/thanh-toan", {
-        goi_dich_vu_id: modalData.goiId,
+  const confirmMuaGoi = async (method = 'vnpay') => {
+  if (!modalData) return;
+
+  try {
+    const endpoint = 
+      method === 'zalopay' 
+        ? '/owner/thanh-toan-goi/zalopay' 
+        : '/owner/thanh-toan';
+
+    const res = await axiosPrivate.post(endpoint, {
+      goi_dich_vu_id: modalData.goiId,
+    });
+
+    if (res.data.success && res.data.payment_url) {
+      navigate("/owner/thanh-toan", {
+        state: {
+          paymentUrl: res.data.payment_url,
+          goiId: modalData.goiId,
+          tenGoi: modalData.tenGoi,
+          gia: modalData.gia,
+          method: method,
+        },
       });
-      if (res.data.payment_url) {
-        navigate("/owner/thanh-toan", {
-          state: {
-            paymentUrl: res.data.payment_url,
-            goiId: modalData.goiId,
-            tenGoi: modalData.tenGoi,
-            gia: modalData.gia,
-          },
-        });
-      } else {
-        alert(res.data.message || "Không tạo được đơn hàng!");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Lỗi kết nối server!");
+    } else {
+      alert(res.data.message || "Không tạo được link thanh toán!");
     }
-    setModalData(null);
-  };
+  } catch (err) {
+  console.error("=== CHI TIẾT LỖI TẠO ĐƠN ===", {
+    status: err.response?.status,
+    data: err.response?.data,
+    message: err.message,
+  });
+
+  let errorMsg = "Không xác định";
+  if (err.response?.data) {
+    const data = err.response.data;
+    errorMsg = data.message || 
+               data.error || 
+               (data.errors ? Object.values(data.errors)[0]?.[0] : null) || 
+               JSON.stringify(data);
+  }
+
+  alert(`Lỗi ${err.response?.status || 'unknown'}: ${errorMsg}`);
+}
+
+  setModalData(null);
+};
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -163,29 +186,46 @@ export default function GoiDichVu() {
             )}
 
             {/* Modal xác nhận mua/gia hạn */}
-            {modalData && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
-                <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full text-center">
-                  <h3 className="text-xl font-bold mb-4 text-primary">
-                    Xác nhận {goiHienTai?.goi_id === modalData.goiId ? "gia hạn" : "mua"} gói
-                  </h3>
-                  <p className="mb-2">
-                    Tên gói: <strong>{modalData.tenGoi}</strong>
-                  </p>
-                  <p className="mb-4">
-                    Giá: <strong>{Number(modalData.gia).toLocaleString("vi-VN")} ₫</strong>
-                  </p>
-                  <div className="flex gap-4 justify-center">
-                    <button className="btn btn-secondary" onClick={() => setModalData(null)}>
-                      Hủy
-                    </button>
-                    <button className="btn btn-primary" onClick={confirmMuaGoi}>
-                      Xác nhận
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+{modalData && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+    <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full text-center">
+      <h3 className="text-xl font-bold mb-4 text-primary">
+        Xác nhận {goiHienTai?.goi_id === modalData.goiId ? "gia hạn" : "mua"} gói
+      </h3>
+      <p className="mb-2">
+        Tên gói: <strong>{modalData.tenGoi}</strong>
+      </p>
+      <p className="mb-4">
+        Giá: <strong>{Number(modalData.gia).toLocaleString("vi-VN")} ₫</strong>
+      </p>
+
+      <p className="text-gray-600 mb-4">Chọn phương thức thanh toán</p>
+
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <button
+          className="btn btn-outline btn-primary flex flex-col items-center gap-2"
+          onClick={() => confirmMuaGoi('vnpay')}
+        >
+          <span>VNPAY</span>
+        </button>
+
+        <button
+          className="btn btn-outline btn-success flex flex-col items-center gap-2"
+          onClick={() => confirmMuaGoi('zalopay')}
+        >
+          <span>ZaloPay</span>
+        </button>
+      </div>
+
+      <button 
+        className="btn btn-ghost w-full mt-2"
+        onClick={() => setModalData(null)}
+      >
+        Hủy
+      </button>
+    </div>
+  </div>
+)}
           </>
         )}
       </div>

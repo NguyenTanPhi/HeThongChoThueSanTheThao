@@ -32,6 +32,7 @@ import BaoCao from "./pages/admin/BaoCao.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword";
 import ZaloPayReturn from "./pages/customer/ZaloPayReturn.jsx";
+import ZaloGoiReturn from "./pages/owner/ZaloGoiReturn.jsx";
 
 // Layout cho khách hàng: có header + footer
 function CustomerLayout() {
@@ -74,6 +75,8 @@ function App() {
         <Route path="/open/confirmEmail" element={<ConfirmEmailSuccess />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+      
+<Route path="/owner/zalo-goi-return" element={<ZaloGoiReturn />} />
       </Route>
 
       {/* Owner routes */}

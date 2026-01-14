@@ -114,4 +114,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::put('/update-profile', [AuthController::class, 'updateProfile']);
+    Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/owner/thanh-toan-goi/zalopay', [OwnerController::class, 'taoThanhToanGoiDichVuZaloPay']);
+    
+    // Callback & redirect
+    Route::post('/zalo/callback/goi-dich-vu', [OwnerController::class, 'zaloReturnGoiDichVu']);
+    Route::get('/zalo/return/goi-dich-vu', [OwnerController::class, 'zaloReturnGoiDichVu']);
+
+    Route::post('/owner/check-thanh-toan/{order_code}', [OwnerController::class, 'checkThanhToan']);
+});
 });
