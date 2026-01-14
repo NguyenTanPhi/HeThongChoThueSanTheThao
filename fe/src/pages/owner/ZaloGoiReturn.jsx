@@ -44,7 +44,7 @@ export default function ZaloGoiReturn() {
 
       // Có thể tự động redirect sau 4 giây
       setTimeout(() => {
-        navigate("/owner/goi-dich-vu");
+        navigate("/owner/dashboard?tab=goi-dich-vu");
       }, 4000);
     } else {
       setStatus("fail");

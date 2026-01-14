@@ -7,6 +7,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const navigate = useNavigate();
 
@@ -68,26 +70,40 @@ export default function Login() {
           )}
 
           <div className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              disabled={loading}
-              className="input input-bordered w-full rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+  <input
+    type="email"
+    placeholder="Email"
+    disabled={loading}
+    className="input input-bordered w-full rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    required
+  />
 
-            <input
-              type="password"
-              placeholder="Mật khẩu"
-              disabled={loading}
-              className="input input-bordered w-full rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+  <div className="relative">
+    <input
+      type={showPassword ? "text" : "password"}
+      placeholder="Mật khẩu"
+      disabled={loading}
+      className="input input-bordered w-full rounded-lg pr-12
+        focus:ring-2 focus:ring-green-500 focus:outline-none"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      required
+    />
+
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute right-3 top-1/2 -translate-y-1/2
+        text-gray-500 hover:text-green-600"
+      tabIndex={-1}
+    >
+      {showPassword ? "🙈" : "👁️"}
+    </button>
+  </div>
+</div> {/* ✅ ĐÓNG space-y-4 */}
+
           <div className="text-right mt-2">
   <Link
     to="/forgot-password"
