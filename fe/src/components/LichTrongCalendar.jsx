@@ -8,8 +8,8 @@ import vi from 'date-fns/locale/vi';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const locales = { vi };
-
-const localizer = dateFnsLocalizer({
+//cấu hình để calendar hiển thị tiếng việt
+const localizer = dateFnsLocalizer({ 
   format,
   parse,
   startOfWeek,
@@ -18,18 +18,18 @@ const localizer = dateFnsLocalizer({
 });
 
 export default function LichTrongCalendar({ lichTrong, onAddSlot, onDeleteSlot }) {
-  const [deleteModal, setDeleteModal] = useState({ open: false, eventId: null });
-  const [priceModal, setPriceModal] = useState({ open: false, start: null, end: null });
-  const [newPrice, setNewPrice] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ open: false, eventId: null }); //modal xóa
+  const [priceModal, setPriceModal] = useState({ open: false, start: null, end: null }); //modal nhập giá
+  const [newPrice, setNewPrice] = useState(''); //giá nhập từ input
   const [toast, setToast] = useState(null);
 
   // Hàm hiển thị toast
   const showToast = (type, message) => {
     setToast({ type, message });
-    setTimeout(() => setToast(null), 3500);
+    setTimeout(() => setToast(null), 3500); //tự động tắt sau 3.5s
   };
 
-  const events = useMemo(() => {
+  const events = useMemo(() => { //chuyển dữ liệu lịch trống thành định dạng sự kiện của calendar
     return lichTrong.map((slot) => ({
       id: slot.id,
       title: `Trống - ${Number(slot.gia).toLocaleString('vi-VN')}đ`,
@@ -129,15 +129,15 @@ export default function LichTrongCalendar({ lichTrong, onAddSlot, onDeleteSlot }
         startAccessor="start"
         endAccessor="end"
         style={{ height: '100%' }}
-        selectable
+        selectable // cho phép chọn khung giờ
         onSelectSlot={handleSelectSlot}
         onSelectEvent={(event) => setDeleteModal({ open: true, eventId: event.id })}
         defaultView="week"
         views={['day', 'week']}
-        step={30}
+        step={30} //mỗi slot 30 phút
         timeslots={2} // 60 phút chia 2 = 30 phút mỗi slot
         min={new Date(0, 0, 0, 6)}
-        max={new Date(0, 0, 0, 23, 59)}
+        max={new Date(0, 0, 0, 23, 59)} //giới hạn 6h - 23h59
         longPressThreshold={10}
         messages={{
           allDay: 'Cả ngày',

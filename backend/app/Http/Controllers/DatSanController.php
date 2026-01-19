@@ -120,7 +120,7 @@ class DatSanController extends Controller
             if ($paymentMethod === 'zalo') {
                 // ZaloPay integration
                 $config = config('zalo');
-                $embeddata = json_encode([
+                $embeddata = json_encode([ //chứa thông tin người dùng và lịch đặt sân
                     'user_id' => $user->id,
                     'san_id' => $lich->san_id,
                     'ngay' => $lich->ngay,
@@ -131,7 +131,7 @@ class DatSanController extends Controller
                 ]);
                 $items = json_encode([]); // luôn là chuỗi JSON array rỗng
                 $transID = rand(0,1000000);
-                $order = [
+                $order = [ // thông tin đơn hàng
                     "app_id" => $config["app_id"],
                     "app_time" => round(microtime(true) * 1000),
                     "app_trans_id" => date("ymd") . "_" . $transID,
@@ -144,10 +144,10 @@ class DatSanController extends Controller
                 ];
                 $data = $order["app_id"] . "|" . $order["app_trans_id"] . "|" . $order["app_user"] . "|" . $order["amount"]
                     . "|" . $order["app_time"] . "|" . $order["embed_data"] . "|" . $order["item"];
-                $order["mac"] = hash_hmac("sha256", $data, $config["key1"]);
+                $order["mac"] = hash_hmac("sha256", $data, $config["key1"]); //tạo chữ ký bảo mật bằng key1
 
                 // Đảm bảo endpoint chỉ là domain, không có /v2/create phía sau
-                $zaloUrl = rtrim($config["endpoint"], '/') . '/v2/create';
+                $zaloUrl = rtrim($config["endpoint"], '/') . '/v2/create'; //gọi api tạo đơn hàng
                 try {
                     $context = stream_context_create([
                         "http" => [
@@ -222,7 +222,7 @@ class DatSanController extends Controller
 
             // VNPay code
             // Tạo mã đơn hàng VNPay
-            $orderCode = 'DS' . random_int(100000, 999999);
+            $orderCode = 'DS' . random_int(100000, 999999); 
 
             $vnp_TmnCode    = config('vnpay.vnp_TmnCode');
             $vnp_HashSecret = config('vnpay.vnp_HashSecret');
@@ -244,11 +244,11 @@ class DatSanController extends Controller
                 'vnp_TxnRef'    => $orderCode,
             ];
 
-            ksort($inputData);
+            ksort($inputData); //tạo chữ ký mật
             $query = http_build_query($inputData);
             $secureHash = hash_hmac('sha512', $query, $vnp_HashSecret);
 
-            $paymentUrl = $vnp_Url . '?' . $query . '&vnp_SecureHash=' . $secureHash;
+            $paymentUrl = $vnp_Url . '?' . $query . '&vnp_SecureHash=' . $secureHash; //tạo url thanh toán
 
             // Lưu cache để xử lý khi VNPay trả về
             Cache::put('vnp_dat_san_' . $orderCode, [
@@ -257,7 +257,7 @@ class DatSanController extends Controller
                 'ngay'       => $lich->ngay,
                 'gio_bat_dau'=> $lich->gio_bat_dau,
                 'gio_ket_thuc'=> $lich->gio_ket_thuc,
-            ], now()->addMinutes(30));
+            ], now()->addMinutes(30)); //cache trả về
 
             return response()->json([
                 'success'     => true,

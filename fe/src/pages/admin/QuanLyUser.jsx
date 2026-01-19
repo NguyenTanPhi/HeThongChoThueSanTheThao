@@ -7,7 +7,7 @@ export default function QuanLyUser() {
   const [loading, setLoading] = useState(true); // Loading khi tải danh sách
   const [actionLoading, setActionLoading] = useState({}); // Loading cho từng user khi khóa/mở
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1); 
   const [meta, setMeta] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
   const [viewUser, setViewUser] = useState(null);
@@ -21,7 +21,7 @@ export default function QuanLyUser() {
   useEffect(() => {
   const delay = setTimeout(() => {
     setSearch(searchInput);
-  }, 400); // 400ms là đẹp
+  }, 400); 
 
   return () => clearTimeout(delay);
 }, [searchInput]);

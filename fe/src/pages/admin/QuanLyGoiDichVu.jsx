@@ -3,17 +3,17 @@ import { useEffect, useState } from "react";
 import { axiosPrivate } from "../../api/instance";
 
 export default function GoiDichVu() {
-  const [packages, setPackages] = useState([]);
+  const [packages, setPackages] = useState([]); 
   const [loading, setLoading] = useState(true); // Loading danh sách gói
   const [actionLoading, setActionLoading] = useState({}); // Loading cho từng hành động (thêm/sửa/xóa)
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
-  const [visibleCount, setVisibleCount] = useState(5);
+  const [visibleCount, setVisibleCount] = useState(5);// Số gói hiển thị ban đầu
 
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState({ 
     ten_goi: "",
     mo_ta: "",
     gia: "",

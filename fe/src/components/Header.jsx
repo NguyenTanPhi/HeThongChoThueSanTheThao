@@ -4,11 +4,11 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { axiosPrivate } from "../api/instance";
 
 export default function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false); //trạng thái đăng nhập
+  const [userName, setUserName] = useState(""); //tên người dùng hiển thị
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useNavigate(); //hook điều hướng bằng code
+  const location = useLocation(); //hook lấy thông tin url hiện tại
 
   // Luôn kiểm tra lại mỗi khi đổi trang hoặc login/logout
   useEffect(() => {
@@ -31,7 +31,7 @@ export default function Header() {
   }, [location.pathname]); 
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.clear(); //xóa toàn bộ localStorage
     axiosPrivate.defaults.headers.common["Authorization"] = ""; 
     setIsLoggedIn(false);
     setUserName("");

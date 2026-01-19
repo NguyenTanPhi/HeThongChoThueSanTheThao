@@ -9,8 +9,8 @@ import { axiosPrivate } from "../../api/instance";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useNavigate(); // hook điều hướng
+  const location = useLocation(); // hook lấy thông tin url hiện tại
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -49,7 +49,7 @@ export default function AdminDashboard() {
         </div>
 
         <nav className="mt-4">
-          {menuItems.map((item) => (
+          {menuItems.map((item) => ( // lặp qua mảng menuItems để tạo các nút điều hướng
             <button
               key={item.id}
               onClick={() => handleTabChange(item.id)}

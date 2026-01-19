@@ -10,7 +10,7 @@ export default function SanCard({ san }) {
 
       const halfTime = start.getTime() + (end - start) / 2;
 
-      return now.getTime() <= halfTime;
+      return now.getTime() <= halfTime; 
     }) || [];
 
   return (

@@ -38,7 +38,7 @@ Route::get('/san', [SanController::class, 'index']);
   Route::get('/san/{id}', [SanController::class, 'show']);
   Route::get('/danh-gia/san/{san_id}', [DanhGiaController::class, 'getBySan']);
   Route::get('/san/{id}/lich-trong', [SanController::class, 'getLichTrongKhach']);
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function () { //kiểm tra xác thực
 
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/admin/bao-cao/dat-san', [AdminReportController::class, 'baoCaoDatSan']);

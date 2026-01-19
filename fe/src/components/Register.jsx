@@ -10,11 +10,11 @@ export default function Register() {
     phone: "",
     role: "customer",
   });
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(""); //hiển thị thông báo chung 
   const [messageType, setMessageType] = useState(""); // success hoặc error
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false); // Trạng thái loading khi submit
-  const navigate = useNavigate();
+  const navigate = useNavigate(); //điều hướng
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,20 +23,20 @@ export default function Register() {
       setErrors({ ...errors, [e.target.name]: [] });
     }
   };
-
+// xóa lỗi cũ khi người dùng sửa
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
-    setMessage("");
-    setMessageType("");
+    setMessage(""); 
+    setMessageType(""); 
     setIsSubmitting(true); // Bật loading
 
     try {
       const res = await axiosPublic.post("/register", formData);
 
       if (formData.role === "customer") {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
+        localStorage.setItem("token", res.data.token); // Lưu token
+        localStorage.setItem("user", JSON.stringify(res.data.user)); // Lưu thông tin user
         setMessage("🎉 Đăng ký thành công, bạn đã được đăng nhập!");
         setMessageType("success");
         setTimeout(() => navigate("/"), 1500); // Chuyển trang sau 1.5s để thấy message

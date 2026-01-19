@@ -8,7 +8,7 @@ use Carbon\Carbon;
 class DatSan extends Model
 {
     protected $table = 'dat_san';
-    protected $appends = ['da_hoan_thanh'];
+    protected $appends = ['da_hoan_thanh']; //dùng để thêm thuộc tính ảo không có trong db nhưng xuất hiện ở fe
     public $timestamps = false;
 
     protected $fillable = [
@@ -27,7 +27,7 @@ class DatSan extends Model
 
     public function thanhToan()
     {
-        return $this->hasOne(ThanhToan::class, 'dat_san_id');
+        return $this->hasOne(ThanhToan::class, 'dat_san_id'); //1-1
     }
     public function getDaHoanThanhAttribute()
 {

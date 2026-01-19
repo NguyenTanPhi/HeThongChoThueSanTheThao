@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class GoiDichVu extends Model
 {
-    use HasFactory;
+    use HasFactory; //cho phép sử dụng factories để tạo dữ liệu mẫu
 
     protected $table = 'goidichvu';
 

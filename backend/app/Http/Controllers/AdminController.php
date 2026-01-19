@@ -12,7 +12,7 @@ class AdminController extends Controller
     public function sanChoDuyet()
 {
     $san = San::where('trang_thai_duyet', 'cho_duyet')
-        ->with(['owner'])
+        ->with(['owner']) 
         ->select('id', 'ten_san', 'loai_san', 'gia_thue', 'dia_chi', 'mo_ta', 'hinh_anh', 'owner_id')
         ->get();
 

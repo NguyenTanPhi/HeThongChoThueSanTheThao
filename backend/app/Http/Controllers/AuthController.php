@@ -16,7 +16,7 @@ class AuthController extends Controller
 {
     $request->validate([
         'name' => 'required|string|max:100',
-        'email' => 'required|email|unique:nguoi_dung,email',
+        'email' => 'required|email|unique:nguoi_dung,email', //kiểm tra là duy nhất trong bảng người dùng
         'password' => 'required|min:6',
         'phone' => 'nullable|string|max:20',
         'role' => 'required|in:customer,owner,admin',
@@ -25,7 +25,7 @@ class AuthController extends Controller
     $user = User::create([
         'name' => $request->name,
         'email' => $request->email,
-        'password' => Hash::make($request->password),
+        'password' => Hash::make($request->password), //mã hóa mk
         'phone' => $request->phone,
         'role' => $request->role,
     ]);

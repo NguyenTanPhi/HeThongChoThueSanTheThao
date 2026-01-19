@@ -6,12 +6,13 @@ use App\Models\GoiDichVu;
 
 class GoiDichVuController extends Controller
 {
+    //kiểm tra dữ liệu đầu vào
     private function validateData(Request $request)
 {
     return $request->validate([
-        'ten_goi' => 'required|string|max:100',
+        'ten_goi' => 'required|string|max:100', //bắt buộc nhập
         'mo_ta' => 'nullable|string',
-        'gia' => 'required|numeric|min:0',
+        'gia' => 'required|numeric|min:0', //bắt buộc nhập, số không âm
         'thoi_han' => 'required|integer|min:1',
         'trang_thai' => 'required|in:hoat_dong,ngung_ban'
     ]);

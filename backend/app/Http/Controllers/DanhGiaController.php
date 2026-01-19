@@ -26,9 +26,9 @@ class DanhGiaController extends Controller
         $exists = DB::table('danh_gia')
             ->where('nguoi_dung_id', $nguoi_dung_id)
             ->where('san_id', $san_id)
-            ->exists();
+            ->exists(); //chỉ được đánh giá 1 lần
 
-        return response()->json(['da_danh_gia' => $exists]);
+        return response()->json(['da_danh_gia' => $exists]); 
     }
 
     //Lưu đánh giá và gửi tb cho owner
@@ -109,7 +109,7 @@ class DanhGiaController extends Controller
     //Lấy đánh giá của sân
     public function getBySan($san_id)
     {
-        $danhGia = DB::table('danh_gia')
+        $danhGia = DB::table('danh_gia') //tối ưu hóa tốc độ truy vấn
             ->join('nguoi_dung', 'danh_gia.nguoi_dung_id', '=', 'nguoi_dung.id')
             ->where('danh_gia.san_id', $san_id)
             ->select([
@@ -126,7 +126,7 @@ class DanhGiaController extends Controller
 
         return response()->json([
             'danh_gia'   => $danhGia,
-            'trung_binh' => round($trungBinh, 1),
+            'trung_binh' => round($trungBinh, 1), //làm tròn 1 chữ số 
             'tong_so'    => $danhGia->count()
         ]);
     }

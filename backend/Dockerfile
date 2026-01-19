@@ -1,4 +1,4 @@
-FROM php:8.2-cli
+FROM php:7.4-cli
 
 # Cài extension cần cho Laravel + MySQL
 RUN apt-get update && apt-get install -y \
@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
-    default-mysql-client \
     && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
 # Cài Composer

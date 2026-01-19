@@ -22,19 +22,19 @@ export default function BaoCao() {
 
   const [datSan, setDatSan] = useState([]);
   const [goiDichVu, setGoiDichVu] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  const [loading, setLoading] = useState(true); // trạng thái tải dữ liệu
+  const [exporting, setExporting] = useState(false); // trạng thái xuất file
 
   /* ===== FILTER ===== */
   const [filterType, setFilterType] = useState("range"); // range | month | year
-  const [fromDate, setFromDate] = useState("");
+  const [fromDate, setFromDate] = useState(""); 
   const [toDate, setToDate] = useState("");
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
 
   /* ===== PAGINATION (FE) ===== */
-  const [pageDatSan, setPageDatSan] = useState(1);
-  const [pageGoi, setPageGoi] = useState(1);
+  const [pageDatSan, setPageDatSan] = useState(1); 
+  const [pageGoi, setPageGoi] = useState(1); //phân trang
 
   useEffect(() => {
     fetchReports();
@@ -77,7 +77,7 @@ export default function BaoCao() {
   };
 
   /* ===== DOANH THU ===== */
-  const tongDatSan = datSan.reduce((t, i) => t + Number(i.so_tien || 0), 0);
+  const tongDatSan = datSan.reduce((t, i) => t + Number(i.so_tien || 0), 0); 
   const tongGoi = goiDichVu.reduce((t, i) => t + Number(i.gia || 0), 0);
   const tongHeThong = tongDatSan + tongGoi;
 

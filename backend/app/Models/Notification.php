@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Notification extends Model
 {
-    use HasFactory;
+    use HasFactory; //cho phép sử dụng factories để tạo dữ liệu mẫu
 
     protected $table = 'notifications';
 
