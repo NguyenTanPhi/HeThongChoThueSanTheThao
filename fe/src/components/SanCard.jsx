@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 
 export default function SanCard({ san }) {
- 
   const lichHopLe =
     san.lich_trong?.filter((lich) => {
       const start = new Date(`${lich.ngay}T${lich.gio_bat_dau}`);
@@ -10,8 +9,18 @@ export default function SanCard({ san }) {
 
       const halfTime = start.getTime() + (end - start) / 2;
 
-      return now.getTime() <= halfTime; 
+      return now.getTime() <= halfTime;
     }) || [];
+
+  // Chuẩn hóa con_lich_trong về boolean
+  const hasSlots =
+    typeof san.con_lich_trong === "boolean"
+      ? san.con_lich_trong
+      : typeof san.con_lich_trong === "number"
+        ? san.con_lich_trong === 1
+        : typeof san.con_lich_trong === "string"
+          ? ["true", "1"].includes(san.con_lich_trong.trim().toLowerCase())
+          : false;
 
   return (
     <Link to={`/san/${san.id}`}>
@@ -56,18 +65,15 @@ export default function SanCard({ san }) {
           </div>
 
           {/* Trạng thái lịch trống */}
-<div className="mt-4 text-sm min-h-[24px]">
-  {san.con_lich_trong ? (
-    <p className="text-emerald-600 font-semibold">
-      ✅ Còn lịch trống
-    </p>
-  ) : (
-    <p className="text-gray-400 italic">
-      ❌ Chưa có lịch trống
-    </p>
-  )}
-</div>
-
+          <div className="mt-4 text-sm min-h-[24px]">
+            {hasSlots ? (
+              <p className="text-emerald-600 font-semibold">
+                ✅ Còn lịch trống
+              </p>
+            ) : (
+              <p className="text-gray-400 italic">❌ Chưa có lịch trống</p>
+            )}
+          </div>
 
           {/* Nút */}
           <div className="card-actions mt-auto pt-4">

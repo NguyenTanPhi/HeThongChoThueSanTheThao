@@ -13,6 +13,14 @@ function normalizeAddress(text = "") {
     .replace(/,/g, "")
     .trim();
 }
+// Thêm normalizeText cho tên
+function normalizeText(text = "") {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
 
 export default function Home() {
   const [sanList, setSanList] = useState([]);
@@ -20,7 +28,7 @@ export default function Home() {
 
   // ✅ FILTER STATE
   const [filters, setFilters] = useState({
-    keyword: "",
+    ten_san: "",
     dia_chi: "",
     minPrice: "",
     maxPrice: "",
@@ -37,35 +45,68 @@ export default function Home() {
   // ✅ LOAD DATA TỪ API (phân trang server)
   useEffect(() => {
     setLoading(true);
-    // Chuẩn bị params filter gửi lên API
     const params = {
       page: currentPage,
       per_page: itemsPerPage,
-      ten_san: filters.keyword,
-      dia_chi: filters.dia_chi,
-      min_price: filters.minPrice,
-      max_price: filters.maxPrice,
     };
+    if (filters.ten_san.trim()) {
+      const v = filters.ten_san.trim();
+      params.ten_san = v;
+      params.keyword = v; // gửi kèm alias nếu backend dùng 'keyword'
+    }
+    if (filters.dia_chi.trim()) params.dia_chi = filters.dia_chi.trim();
+    if (filters.minPrice !== "" && !isNaN(Number(filters.minPrice)))
+      params.min_price = filters.minPrice;
+    if (filters.maxPrice !== "" && !isNaN(Number(filters.maxPrice)))
+      params.max_price = filters.maxPrice;
+
     getSanList(params)
       .then((res) => {
         const data = res.data;
-        setSanList(data.data || []);
-        setTotal(data.total || 0);
-        setLastPage(data.last_page || 1);
+        let list = data.data || [];
+
+        // Fallback lọc tên ở client nếu backend không lọc
+        if (filters.ten_san.trim()) {
+          const q = normalizeText(filters.ten_san);
+          const filtered = list.filter((s) =>
+            normalizeText(s.ten_san || "").includes(q),
+          );
+          const totalLocal = filtered.length;
+          const lastPageLocal = Math.max(
+            1,
+            Math.ceil(totalLocal / itemsPerPage),
+          );
+          const start = (currentPage - 1) * itemsPerPage;
+          const pageList = filtered.slice(start, start + itemsPerPage);
+
+          setSanList(pageList);
+          setTotal(totalLocal);
+          setLastPage(lastPageLocal);
+        } else {
+          // Giữ phân trang server khi không lọc tên
+          setSanList(list);
+          setTotal(data.total || 0);
+          setLastPage(data.last_page || 1);
+        }
+
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [currentPage, filters]);
 
   // ✅ RESET PAGE KHI FILTER THAY ĐỔI
+  // Đảm bảo chỉ reset khi filter thực sự thay đổi
+  const prevFilters = React.useRef(filters);
   useEffect(() => {
-    setCurrentPage(1);
+    if (prevFilters.current !== filters) {
+      setCurrentPage(1);
+      prevFilters.current = filters;
+    }
   }, [filters]);
 
   return (
     <>
       <Header />
-
       {/* HERO */}
       <div className="relative h-[480px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-green-600 to-emerald-800 opacity-95"></div>
@@ -106,9 +147,9 @@ export default function Home() {
             <input
               placeholder="🔍 Tên sân"
               className="input input-bordered"
-              value={filters.keyword}
+              value={filters.ten_san}
               onChange={(e) =>
-                setFilters({ ...filters, keyword: e.target.value })
+                setFilters((prev) => ({ ...prev, ten_san: e.target.value }))
               }
             />
 
@@ -117,7 +158,7 @@ export default function Home() {
               className="input input-bordered"
               value={filters.dia_chi}
               onChange={(e) =>
-                setFilters({ ...filters, dia_chi: e.target.value })
+                setFilters((prev) => ({ ...prev, dia_chi: e.target.value }))
               }
             />
 
@@ -127,8 +168,12 @@ export default function Home() {
               className="input input-bordered"
               value={filters.minPrice}
               onChange={(e) =>
-                setFilters({ ...filters, minPrice: e.target.value })
+                setFilters((prev) => ({
+                  ...prev,
+                  minPrice: e.target.value.replace(/^0+/, ""),
+                }))
               }
+              min={0}
             />
 
             <input
@@ -137,8 +182,12 @@ export default function Home() {
               className="input input-bordered"
               value={filters.maxPrice}
               onChange={(e) =>
-                setFilters({ ...filters, maxPrice: e.target.value })
+                setFilters((prev) => ({
+                  ...prev,
+                  maxPrice: e.target.value.replace(/^0+/, ""),
+                }))
               }
+              min={0}
             />
           </div>
           {/* QUICK FILTER KHU VỰC */}
@@ -169,7 +218,7 @@ export default function Home() {
               className="btn btn-outline btn-sm"
               onClick={() =>
                 setFilters({
-                  keyword: "",
+                  ten_san: "",
                   dia_chi: "",
                   minPrice: "",
                   maxPrice: "",
